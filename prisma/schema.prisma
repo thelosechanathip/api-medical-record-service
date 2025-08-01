@@ -1,0 +1,65 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// รหัสสถานพยาบาล
+model hcodes {
+  hcode_id   String     @id @default(uuid())
+  hcode      String
+  hcode_name String
+  created_at DateTime   @default(now())
+  created_by String?
+  updated_at DateTime   @default(now())
+  updated_by String?
+  patients   patients[]
+}
+
+// ข้อมูลคนไข้
+model patients {
+  patient_id              String   @id @default(uuid())
+  hcodes                  hcodes   @relation(fields: [hcode_id], references: [hcode_id], onDelete: Restrict)
+  hcode_id                String
+  patient_fullname        String
+  patient_hn              String
+  patient_vn              String?   @unique
+  patient_an              String?   @unique
+  patient_ward            String?
+  patient_date_service    String?
+  patient_date_admitted   String?
+  patient_date_discharged String?
+  created_at              DateTime @default(now())
+  created_by              String?
+  updated_at              DateTime @default(now())
+  updated_by              String?
+}
+
+// คำระบุของกลุ่มคนไข้
+model patient_services {
+  patient_service_id           String          @id @default(uuid())
+  patient_service_name_english String          @unique
+  patient_service_name_thai    String          @unique
+  created_at                   DateTime        @default(now())
+  created_by                   String?
+  updated_at                   DateTime        @default(now())
+  updated_by                   String?
+  review_statuses              review_status[]
+}
+
+// สถานะการตรวจสอบ Chart
+model review_status {
+  review_status_id          String            @id @default(uuid())
+  review_status_name        String            @unique
+  review_status_description String
+  review_status_type        Int?
+  patient_service_id        String?
+  patient_service           patient_services? @relation(fields: [patient_service_id], references: [patient_service_id], onDelete: Restrict)
+  created_at                DateTime          @default(now())
+  created_by                String?
+  updated_at                DateTime          @default(now())
+  updated_by                String?
+}
