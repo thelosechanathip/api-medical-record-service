@@ -26,8 +26,8 @@ model patients {
   hcode_id                String
   patient_fullname        String
   patient_hn              String
-  patient_vn              String?   @unique
-  patient_an              String?   @unique
+  patient_vn              String?  @unique
+  patient_an              String?  @unique
   patient_ward            String?
   patient_date_service    String?
   patient_date_admitted   String?
@@ -48,6 +48,22 @@ model patient_services {
   updated_at                   DateTime        @default(now())
   updated_by                   String?
   review_statuses              review_status[]
+}
+
+// Log การทำงานของ Patient Services
+model patient_service_logs {
+  patient_service_log_id String   @id @default(uuid())
+  ip_address             String
+  name                   String
+  request_method         String
+  endpoint               String
+  execution_time         Int
+  row_count              Int?
+  status                 String
+  created_at             DateTime @default(now())
+  created_by             String?
+  updated_at             DateTime @default(now())
+  updated_by             String?
 }
 
 // สถานะการตรวจสอบ Chart
