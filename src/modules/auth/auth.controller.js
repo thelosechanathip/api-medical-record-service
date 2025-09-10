@@ -44,7 +44,7 @@ exports.AuthLogin = async (req, res) => {
 
         if (token) {
             try {
-                const dataToken = Verify(token)
+                const dataToken = await Verify(token)
                 const exp = new Date(dataToken.exp * 1000) // คูณ 1000 เพราะ timestamp เป็นวินาที แต่ Date ใช้มิลลิวินาที
 
                 const st = Date.now()
@@ -73,7 +73,7 @@ exports.VerifyOtp = async (req, res) => {
     const token = authHeader.split(' ')[1]
 
     try {
-        const decoded = Verify(token)
+        const decoded = await Verify(token)
         if (!decoded) return msg(res, 401, { message: 'Token ไม่ถูกต้อง' })
 
         const { otpCode } = req.body
