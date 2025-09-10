@@ -7,6 +7,41 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// OTP and Verify Token
+model auth_tokens {
+  auth_token_id String   @id @default(uuid())
+  token         String   @db.VarChar(255) // Token ที่ Generate มาตอน Login
+  user_id       Int // ID ของ User ที่ Generate
+  otp_verified  Int?     @db.TinyInt @default(0) // Status การยืนยันตัวตนด้วย OTP
+  created_at    DateTime @default(now()) // วัน-เวลาที่บันทึกข้อมูล
+  expires_at    DateTime // เวลาที่หมดอายุของ Token
+  is_active     Int?     @db.TinyInt @default(1) // Status ที่บอกว่า Token นี้ใช้งานได้หรือไม่ได้
+}
+
+// BlackList Token
+model auth_token_blacklist {
+  auth_token_blacklist_id String   @id @default(uuid())
+  token                   String   @db.VarChar(255) // Token ที่ Generate มาตอน Login
+  blacklisted_at          DateTime @default(now()) // วัน-เวลาที่บันทึกข้อมูล
+  expires_at              DateTime // เวลาที่หมดอายุของ Token
+}
+
+// Log การทำงานของ Auth
+model auth_logs {
+  auth_log_id    String   @id @default(uuid())
+  ip_address     String
+  name           String
+  request_method String
+  endpoint       String
+  execution_time Int
+  row_count      Int?
+  status         String
+  created_at     DateTime @default(now())
+  created_by     String?
+  updated_at     DateTime @default(now())
+  updated_by     String?
+}
+
 // รหัสสถานพยาบาล
 model hcodes {
   hcode_id   String     @id @default(uuid())

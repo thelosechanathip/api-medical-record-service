@@ -12,13 +12,22 @@
   "description": "",
   "dependencies": {
     "@prisma/client": "^6.13.0",
+    "axios": "^1.11.0",
+    "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
+    "crypto-js": "^4.2.0",
     "dotenv": "^17.2.1",
     "express": "^5.1.0",
     "fs": "^0.0.1-security",
+    "jsonwebtoken": "^9.0.2",
     "moment": "^2.30.1",
     "morgan": "^1.10.1",
+    "mysql2": "^3.14.5",
+    "node-cache": "^5.1.2",
+    "node-schedule": "^2.1.1",
+    "node-telegram-bot-api": "^0.66.0",
     "nodemon": "^3.1.10",
+    "otp-generator": "^4.0.1",
     "path": "^0.12.7",
     "prisma": "^6.13.0"
   }

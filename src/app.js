@@ -6,6 +6,7 @@ require("dotenv").config()
 
 // All Paths => Setting
 const patientService = require('./modules/setting/patientService/patient-service.route')
+const auth = require('./modules/auth/auth.route')
 
 // All Services
 const { msg } = require('./services/message.service')
@@ -24,6 +25,7 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }))
 
 // All Routes => Setting
 app.use(`/${BASE_PATH}/setting`, patientService)
+app.use(`/${BASE_PATH}/auth`, auth)
 
 // 404 NOT FOUND
 app.use((req, res) => { return msg(res, 404, { message: "404 NOT FOUND" }) })

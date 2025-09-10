@@ -1,4 +1,5 @@
 const app = require("./src/app")
+
 const PORT = process.env.PORT
 if (!PORT) return console.error("Please set PORT in .env file")
 
