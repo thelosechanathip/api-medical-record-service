@@ -90,7 +90,7 @@ model patient_services {
   review_statuses              review_status[]
 }
 
-// Log การทำงานของ Patient Services
+// Log การทำงานของ patient_services
 model patient_service_logs {
   patient_service_log_id String   @id @default(uuid())
   ip_address             String // ip_address ของผู้ใช้งาน
@@ -106,7 +106,7 @@ model patient_service_logs {
   @@index([endpoint])
 }
 
-// สถานะการตรวจสอบ Chart
+// ตารางเก็บข้อมูลสถานะการตรวจสอบ
 model review_status {
   review_status_id          String            @id @default(uuid())
   review_status_name        String            @unique // ชื่อสถานะการตรวจสอบ
@@ -120,7 +120,7 @@ model review_status {
   updated_by                String?           @default("admin") // ชื่อผู้อัพเดท
 }
 
-// Log การทำงานของ Patient Services
+// Log การทำงานของ review_status
 model review_status_logs {
   review_status_log_id String   @id @default(uuid())
   ip_address           String // ip_address ของผู้ใช้งาน

@@ -1,4 +1,3 @@
-const { patient_services } = require('../../../libs/prisma')
 const { msg } = require('../../../services/message.service')
 const { setLog } = require('../../../services/setLog.service')
 const ptsm = require('./patient-service.model') // ptsm = patient service model
@@ -6,9 +5,10 @@ const ptsm = require('./patient-service.model') // ptsm = patient service model
 // Function FetchAll
 exports.FetchAllPatientServices = async (req, res) => {
     try {
-        const st = Date.now() // st = start time // st = start time
+        const st = Date.now() // st = start time
         const fapts = await ptsm.FetchAllPatientServices() // fapts = fetch all patient services
-        const et = Date.now() - st // et = end time // et = end time
+        if (fapts.length === 0) return msg(res, 404, { message: 'Data not found!' })
+        const et = Date.now() - st // et = end time
 
         // Set and Insert Log
         const sl = setLog(req, req.fullname, et, fapts) // sl = set log
@@ -37,7 +37,7 @@ exports.CreatePatientService = async (req, res) => {
 
                 // ตรวจสอบค่าซ้ำเฉพาะ field ที่ไม่ว่าง
                 if (value) {
-                    const ffpts = await ptsm.FindFirstPatientService(key, value) // ffpts = find first patient service // ffpts = existing record
+                    const ffpts = await ptsm.FindFirstPatientService(key, value) // ffpts = find first patient service
                     if (ffpts) {
                         dpcs.push(409)
                         dpcms.push(`( ${value} ) มีข้อมูลในระบบแล้ว ไม่อนุญาตให้บันทึกข้อมูลซ้ำ!`)
@@ -78,15 +78,15 @@ exports.FetchOnePatientServiceById = async (req, res) => {
         const ptsId = req.params.ptsId // ptsId = patient service id
 
         const st = Date.now() // st = start time
-        const fo = await ptsm.FetchOnePatientServiceById(ptsId)
-        if (!fo) return msg(res, 404, { message: 'Data not found!' })
+        const fopsbi = await ptsm.FetchOnePatientServiceById(ptsId) // fopsbi = fetch one patient service by id
+        if (!fopsbi) return msg(res, 404, { message: 'Data not found!' })
         const et = Date.now() - st // et = end time
 
         // Set and Insert Log
-        const sl = setLog(req, req.fullname, et, fo) // sl = set log
+        const sl = setLog(req, req.fullname, et, fopsbi) // sl = set log
         await ptsm.InsertLog(sl)
 
-        return msg(res, 200, { data: fo })
+        return msg(res, 200, { data: fopsbi })
     } catch (err) {
         throw new Error(err.message)
     }

@@ -18,8 +18,9 @@ require("dotenv").config()
 */
 
 // All Routes
-const patientService = require('./modules/setting/patientService/patient-service.route')
 const auth = require('./modules/auth/auth.route')
+const spts = require('./modules/setting/patientService/patient-service.route')
+const srst = require('./modules/setting/reviewStatus/review-status.route')
 
 // Services
 const { msg } = require('./services/message.service')
@@ -65,8 +66,9 @@ app.get('/ready', (_req, res) => res.status(200).send('ready'))
 // ให้ใส่ parser ระดับ route เท่านั้น เช่น:
 //   router.post('/upload', express.json({ limit: '50mb' }), handler)
 
-app.use(`/${BASE_PATH}/setting`, patientService)
 app.use(`/${BASE_PATH}/auth`, auth)
+app.use(`/${BASE_PATH}/setting`, spts)
+app.use(`/${BASE_PATH}/setting`, srst)
 
 // 404 NOT FOUND — ตอบให้ไว
 app.use((_, res) => msg(res, 404, { message: "404 NOT FOUND" }))
