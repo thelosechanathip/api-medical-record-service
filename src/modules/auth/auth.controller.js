@@ -13,13 +13,15 @@ const am = require("./auth.model")
         ftr = fetch telegram by person id
         iat = insert auth token
         fuui = fetch user by user id
-        uat = update auth token
+        uato = update auth token otp
+        uatoia = update auth token is active
         st = start time
         et = end time
         sl = set log
+        iatbl = insert auth token blacklist
 */
 
-// ระบบ Login
+// Function Login
 exports.AuthLogin = async (req, res) => {
     try {
         const data = req.body
@@ -27,20 +29,20 @@ exports.AuthLogin = async (req, res) => {
         // Check username and password
         const fur = await am.FetchUser(data.username)
         if (fur.length === 0) return msg(res, 404, { message: "User not found!" })
-        const cp = await ComparePassword(data.password, fur[0].password)
+        const cp = await ComparePassword(data.password, fur.password)
         if (!cp) return msg(res, 400, { message: "Password incorrect!" })
 
         // Check Telegram
-        const ftr = await am.FetchTelegramByPersonId(fur[0].person_id)
+        const ftr = await am.FetchTelegramByPersonId(fur.person_id)
         if (ftr.length === 0) return msg(res, 404, { message: "Telegram not found!" })
 
         // Generate Token and Fetch Bot Token
-        const token = Sign(fur[0].id, ftr[0].chat_id)
+        const token = await Sign(fur.id, ftr.chat_id)
         const botToken = await am.FetchBotToken()
 
         // Generate OTP and Send to Telegram
-        const otpCode = await generateOtp(ftr[0].chat_id)
-        await sendTelegramMessage(ftr[0].chat_id, otpCode, botToken[0].token)
+        const otpCode = await generateOtp(ftr.chat_id)
+        await sendTelegramMessage(ftr.chat_id, otpCode, botToken.token)
 
         if (token) {
             try {
@@ -48,10 +50,10 @@ exports.AuthLogin = async (req, res) => {
                 const exp = new Date(dataToken.exp * 1000) // คูณ 1000 เพราะ timestamp เป็นวินาที แต่ Date ใช้มิลลิวินาที
 
                 const st = Date.now()
-                const iat = await am.InsertAuthtoken({ token: token, user_id: fur[0].id, expires_at: exp })
+                const iat = await am.InsertAuthtoken({ token: token, user_id: fur.id, expires_at: exp })
                 const et = Date.now() - st
 
-                const sl = setLog(req, fur[0].fullname, et, iat)
+                const sl = setLog(req, fur.fullname, et, iat)
                 await am.insertLog(sl)
 
                 if (iat) return msg(res, 200, { token: token })
@@ -65,7 +67,7 @@ exports.AuthLogin = async (req, res) => {
     }
 }
 
-// ยืนยันตัวตนด้วยเลข OTP
+// Function Verify OTP
 exports.VerifyOtp = async (req, res) => {
     const authHeader = req.headers.authorization
     if (!authHeader) return msg(res, 401, { message: 'ไม่มี Token ถูกส่งมา' })
@@ -80,16 +82,17 @@ exports.VerifyOtp = async (req, res) => {
         const chatId = decoded.chatId
         if (!chatId) return msg(res, 401, { message: 'ไม่พบ chatId' })
 
-        const cacheOtp = getOtp(chatId)
+        const cacheOtp = await getOtp(chatId)
         if (!cacheOtp) return msg(res, 400, { message: "OTP หมดอายุหรือไม่ถูกต้อง" })
 
         if (cacheOtp === otpCode) {
-            const fuui = await am.FetchUserByUserId(decoded.id)
+            const fuui = await am.FetchUserByUserId(decoded.userId)
+
             const st = Date.now()
-            const uat = await am.UpdateAuthtoken(token)
+            const uato = await am.UpdateAuthtokenOtp(token)
             const et = Date.now() - st
 
-            const sl = setLog(req, fuui[0].fullname, et, uat)
+            const sl = setLog(req, fuui.fullname, et, uato)
             await am.insertLog(sl)
 
             return msg(res, 200, { message: "Login successfully!" })
@@ -102,5 +105,45 @@ exports.VerifyOtp = async (req, res) => {
         }
         console.error('Error verifyToken :', err)
         return msg(res, 500, { message: 'Internal Server Error!' })
+    }
+}
+
+// Function Verify
+exports.Verify = async (req, res) => {
+    const userId = req.user.userId
+    try {
+        const st = Date.now()
+        const fuui = await am.FetchUserByUserId(userId)
+        const et = Date.now() - st
+
+        const sl = setLog(req, fuui.fullname, et, fuui)
+        await am.insertLog(sl)
+
+        return msg(res, 200, { data: fuui })
+    } catch (err) {
+        throw new Error(err.message)
+    }
+}
+
+// Function Logout
+exports.Logout = async (req, res) => {
+    const user = req.user
+    const token = req.token
+    try {
+        const fuui = await am.FetchUserByUserId(user.userId)
+
+        const exp = new Date(user.exp * 1000)
+        await am.InsertAuthtokenBlacklist({ token: token, expires_at: exp })
+
+        const st = Date.now()
+        const uatoia = await am.UpdateAuthtokenIsActive(token)
+        const et = Date.now() - st
+
+        const sl = setLog(req, fuui.fullname, et, uatoia)
+        await am.insertLog(sl)
+
+        return msg(res, 200, { message: 'Logout successfully!' })
+    } catch (err) {
+        throw new Error(err.message)
     }
 }

@@ -10,107 +10,128 @@ datasource db {
 // OTP and Verify Token
 model auth_tokens {
   auth_token_id String   @id @default(uuid())
-  token         String   @db.VarChar(255) // Token ที่ Generate มาตอน Login
+  token         String   @unique @db.VarChar(255) // Token ที่ Generate มาตอน Login
   user_id       Int // ID ของ User ที่ Generate
-  otp_verified  Int?     @db.TinyInt @default(0) // Status การยืนยันตัวตนด้วย OTP
+  otp_verified  Boolean  @default(false) // Status การยืนยันตัวตนด้วย OTP
   created_at    DateTime @default(now()) // วัน-เวลาที่บันทึกข้อมูล
   expires_at    DateTime // เวลาที่หมดอายุของ Token
-  is_active     Int?     @db.TinyInt @default(1) // Status ที่บอกว่า Token นี้ใช้งานได้หรือไม่ได้
+  is_active     Boolean  @default(true) // Status ที่บอกว่า Token นี้ใช้งานได้หรือไม่ได้
+
+  // 🔎 ช่วย query เร็วขึ้นมากสำหรับ verify / cleanup / รายงาน
+  @@index([user_id])
+  @@index([otp_verified, is_active])
+  @@index([expires_at])
 }
 
 // BlackList Token
 model auth_token_blacklist {
   auth_token_blacklist_id String   @id @default(uuid())
-  token                   String   @db.VarChar(255) // Token ที่ Generate มาตอน Login
+  token                   String   @unique @db.VarChar(255) // Token ที่ Generate มาตอน Login
   blacklisted_at          DateTime @default(now()) // วัน-เวลาที่บันทึกข้อมูล
   expires_at              DateTime // เวลาที่หมดอายุของ Token
+
+  @@index([expires_at])
 }
 
 // Log การทำงานของ Auth
 model auth_logs {
   auth_log_id    String   @id @default(uuid())
-  ip_address     String
-  name           String
-  request_method String
-  endpoint       String
-  execution_time Int
-  row_count      Int?
-  status         String
-  created_at     DateTime @default(now())
-  created_by     String?
-  updated_at     DateTime @default(now())
-  updated_by     String?
+  ip_address     String // ip_address ของผู้ใช้งาน
+  name           String // ชื่อผู้ใช้งาน
+  request_method String // method ที่ผู้ใช้งานใช้
+  endpoint       String // path api ที่ผู้ใช้งานใช้
+  execution_time Int // เวลาในการ Query
+  row_count      Int? // จำนวนข้อมูลทั้งหมด
+  status         String // สถานะการทำงาน
+  created_at     DateTime @default(now()) // วัน-เวลาที่บันทึก
+
+  @@index([created_at])
+  @@index([endpoint])
 }
 
-// รหัสสถานพยาบาล
+// ตารางเก็บข้อมูลสถานพยาบาล
 model hcodes {
   hcode_id   String     @id @default(uuid())
-  hcode      String
-  hcode_name String
-  created_at DateTime   @default(now())
-  created_by String?
-  updated_at DateTime   @default(now())
-  updated_by String?
+  hcode      Int        @unique // รหัสสถานพยาบาล
+  hcode_name String     @unique // ชื่อสถานพยาบาล
+  created_at DateTime   @default(now()) // วัน-เวลาที่บันทึก
+  created_by String?    @default("admin") // ชื่อผู้บันทึก
   patients   patients[]
 }
 
-// ข้อมูลคนไข้
+// ตารางเก็บข้อมูลผู้ป่วย
 model patients {
   patient_id              String   @id @default(uuid())
   hcodes                  hcodes   @relation(fields: [hcode_id], references: [hcode_id], onDelete: Restrict)
-  hcode_id                String
-  patient_fullname        String
-  patient_hn              String
-  patient_vn              String?  @unique
-  patient_an              String?  @unique
-  patient_ward            String?
-  patient_date_service    String?
-  patient_date_admitted   String?
-  patient_date_discharged String?
-  created_at              DateTime @default(now())
-  created_by              String?
-  updated_at              DateTime @default(now())
-  updated_by              String?
+  hcode_id                String // Foreign Key ของตาราง hcodes( ข้อมูลรหัสประจำสถานพยาบาล )
+  patient_fullname        String // คำนำหน้า-ชื่อ-สกุล คนไข้
+  patient_hn              String // หมายเลขประจำตัวคนไข้
+  patient_vn              String?  @unique // หมายเลขการเข้ารักษาตัวในโรงพยาบาล
+  patient_an              String?  @unique // หมายเลขการนอนโรงพยาบาล
+  patient_ward            String? // หมายเลขตึก
+  patient_date_service    String? // วันที่ให้บริการ
+  patient_date_admitted   String? // วันที่เข้ารับรักษา
+  patient_date_discharged String? // วันที่ออกจากโรงพยาบาล
+  created_at              DateTime @default(now()) // วัน-เวลาที่บันทึก
+  created_by              String?  @default("admin") // ชื่อผู้บันทึก
+  updated_at              DateTime @updatedAt // วัน-เวลาที่อัพเดท
+  updated_by              String?  @default("admin") // ชื่อผู้อัพเดท
 }
 
-// คำระบุของกลุ่มคนไข้
+// ตารางเก็บข้อมูลคำระบุของกลุ่มคนไข้
 model patient_services {
   patient_service_id           String          @id @default(uuid())
-  patient_service_name_english String          @unique
-  patient_service_name_thai    String          @unique
-  created_at                   DateTime        @default(now())
-  created_by                   String?
-  updated_at                   DateTime        @default(now())
-  updated_by                   String?
+  patient_service_name_english String          @unique // ชื่อคำระบุของกลุ่มคนไข้อังกฤษ
+  patient_service_name_thai    String          @unique // ชื่อคำระบุของกลุ่มคนไข้ไทย
+  created_at                   DateTime        @default(now()) // วัน-เวลาที่บันทึก
+  created_by                   String?         @default("admin") // ชื่อผู้บันทึก
+  updated_at                   DateTime        @updatedAt // วัน-เวลาที่อัพเดท
+  updated_by                   String?         @default("admin") // ชื่อผู้อัพเดท
   review_statuses              review_status[]
 }
 
 // Log การทำงานของ Patient Services
 model patient_service_logs {
   patient_service_log_id String   @id @default(uuid())
-  ip_address             String
-  name                   String
-  request_method         String
-  endpoint               String
-  execution_time         Int
-  row_count              Int?
-  status                 String
-  created_at             DateTime @default(now())
-  created_by             String?
-  updated_at             DateTime @default(now())
-  updated_by             String?
+  ip_address             String // ip_address ของผู้ใช้งาน
+  name                   String // ชื่อผู้ใช้งาน
+  request_method         String // method ที่ผู้ใช้งานใช้
+  endpoint               String // path api ที่ผู้ใช้งานใช้
+  execution_time         Int // เวลาในการ Query
+  row_count              Int? // จำนวนข้อมูลทั้งหมด
+  status                 String // สถานะการทำงาน
+  created_at             DateTime @default(now()) // วัน-เวลาที่บันทึก
+
+  @@index([created_at])
+  @@index([endpoint])
 }
 
 // สถานะการตรวจสอบ Chart
 model review_status {
   review_status_id          String            @id @default(uuid())
-  review_status_name        String            @unique
-  review_status_description String
-  review_status_type        Int?
-  patient_service_id        String?
+  review_status_name        String            @unique // ชื่อสถานะการตรวจสอบ
+  review_status_description String // คำอธิบายสถานะการตรวจสอบ
+  review_status_type        Boolean? // Type ที่เอาไว้บอกว่าจำเป็นหรือไม่จำเป็นที่จะต้องอธิบายเพิ่มเติม ( 0 = ไม่จำเป็น, 1 = จำเป็น )
+  patient_service_id        String? // Foreign Key ของตาราง patient_services( ข้อมูลคำระบุของกลุ่มคนไข้ )
   patient_service           patient_services? @relation(fields: [patient_service_id], references: [patient_service_id], onDelete: Restrict)
-  created_at                DateTime          @default(now())
-  created_by                String?
-  updated_at                DateTime          @default(now())
-  updated_by                String?
+  created_at                DateTime          @default(now()) // วัน-เวลาที่บันทึก
+  created_by                String?           @default("admin") // ชื่อผู้บันทึก
+  updated_at                DateTime          @updatedAt // วัน-เวลาที่อัพเดท
+  updated_by                String?           @default("admin") // ชื่อผู้อัพเดท
+}
+
+// Log การทำงานของ Patient Services
+model review_status_logs {
+  review_status_log_id String   @id @default(uuid())
+  ip_address           String // ip_address ของผู้ใช้งาน
+  name                 String // ชื่อผู้ใช้งาน
+  request_method       String // method ที่ผู้ใช้งานใช้
+  endpoint             String // path api ที่ผู้ใช้งานใช้
+  execution_time       Int // เวลาในการ Query
+  row_count            Int? // จำนวนข้อมูลทั้งหมด
+  status               String // สถานะการทำงาน
+  created_at           DateTime @default(now()) // วัน-เวลาที่บันทึก
+
+  @@index([created_at])
+  @@index([endpoint])
 }

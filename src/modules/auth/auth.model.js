@@ -1,29 +1,32 @@
 const pm = require('../../libs/prisma')
 const db_b = require('../../libs/db_b')
 
+// ---------- Helpers ----------
+const pickFirst = (rows) => (Array.isArray(rows) && rows.length ? rows[0] : null)
+
 // Record work data(บันทึกข้อมูลการทำงาน)
 exports.insertLog = async (data) => await pm.auth_logs.create({ data: data })
 
-exports.FetchUser = async (data) => {
-    const result = await db_b.query(
+exports.FetchUser = async (username) => {
+    const [rows] = await db_b.query(
         `
-            SELECT
-                u.id,
-                u.name AS fullname,
-                u.username,
-                u.password,
-                u.PERSON_ID AS person_id
-            FROM
-                users AS u
-            WHERE
-                u.username = ?
-        `, [data]
+      SELECT
+        u.id,
+        u.name  AS fullname,
+        u.username,
+        u.password,
+        u.PERSON_ID  AS person_id
+      FROM users AS u
+      WHERE u.username = ?
+      LIMIT 1
+    `,
+        [username]
     )
-    return result[0]
+    return pickFirst(rows)
 }
 
-exports.FetchTelegramByPersonId = async (data) => {
-    const result = await db_b.query(
+exports.FetchTelegramByPersonId = async (personId) => {
+    const [rows] = await db_b.query(
         `
             SELECT
                 nu.chat_id
@@ -31,34 +34,35 @@ exports.FetchTelegramByPersonId = async (data) => {
             WHERE
                 nu.service = 'telegram'
                 AND nu.person_id = ?
-        `, [data]
+        `, [personId]
     )
-    return result[0]
+    return pickFirst(rows)
 }
 
 exports.FetchBotToken = async () => {
-    const result = await db_b.query('SELECT token FROM notify_app WHERE service = "telegram"')
-    return result[0]
+    const [rows] = await db_b.query('SELECT token FROM notify_app WHERE service = "telegram"')
+    return pickFirst(rows)
 }
 
 exports.InsertAuthtoken = async (data) => await pm.auth_tokens.create({ data: data })
 
-exports.FetchUserByUserId = async (data) => {
-    const result = await db_b.query(
+exports.FetchUserByUserId = async (userId) => {
+    const [rows] = await db_b.query(
         `
             SELECT
-                u.id,
                 u.name AS fullname,
-                u.username,
-                u.password,
-                u.PERSON_ID AS person_id
+                u.status
             FROM
                 users AS u
             WHERE
                 u.id = ?
-        `, [data]
+        `, [userId]
     )
-    return result[0]
+    return pickFirst(rows)
 }
 
-exports.UpdateAuthtoken = async (data) => await pm.auth_tokens.update({ where: { token: data }, data: { otp_verified: true } })
+exports.UpdateAuthtokenOtp = async (token) => await pm.auth_tokens.update({ where: { token: token }, data: { otp_verified: true } })
+
+exports.InsertAuthtokenBlacklist = async (data) => await pm.auth_token_blacklist.create({ data: data })
+
+exports.UpdateAuthtokenIsActive = async (token) => await pm.auth_tokens.update({ where: { token: token }, data: { is_active: false } })

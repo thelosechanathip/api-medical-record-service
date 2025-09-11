@@ -20,9 +20,7 @@ exports.setLog = (req, fullname, endTime, resultData) => {
         endpoint: req.originalUrl,
         execution_time: endTime,
         row_count: row_count,
-        status: status,
-        created_by: fullname,
-        updated_by: fullname
+        status: status
     }
 
     // Return log data(ส่งคืนขค่ากลับไป)
