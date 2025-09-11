@@ -5,7 +5,7 @@ const db_b = require('../../libs/db_b')
 const pickFirst = (rows) => (Array.isArray(rows) && rows.length ? rows[0] : null)
 
 // Record work data(บันทึกข้อมูลการทำงาน)
-exports.insertLog = async (data) => await pm.auth_logs.create({ data: data })
+exports.InsertLog = async (data) => await pm.auth_logs.create({ data: data })
 
 exports.FetchUser = async (username) => {
     const [rows] = await db_b.query(

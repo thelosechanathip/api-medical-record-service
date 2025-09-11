@@ -1,83 +1,170 @@
+const { patient_services } = require('../../../libs/prisma')
 const { msg } = require('../../../services/message.service')
 const { setLog } = require('../../../services/setLog.service')
-const psm = require('./patient-service.model')
+const ptsm = require('./patient-service.model') // ptsm = patient service model
 
-/* 
-    นิยามตัวย่อ:
-        psm = patient service model
-        psd = patient service data
-        rd = result data
-        sl = set log
-        st = start time
-        et = end time
-*/
-
-// Retrieve all data from the patient_services table(ดึงข้อมูลทั้งหมดจากตาราง patient_services)
-exports.fetchAllPatientServices = async (req, res) => {
+// Function FetchAll
+exports.FetchAllPatientServices = async (req, res) => {
     try {
-        const st = Date.now()
-        const rd = await psm.fetchAllPatientServices()
-        const et = Date.now() - st
+        const st = Date.now() // st = start time // st = start time
+        const fapts = await ptsm.FetchAllPatientServices() // fapts = fetch all patient services
+        const et = Date.now() - st // et = end time // et = end time
 
         // Set and Insert Log
-        const sl = setLog(req, "Chanathip", et, rd)
-        await psm.insertLog(sl)
+        const sl = setLog(req, req.fullname, et, fapts) // sl = set log
+        await ptsm.InsertLog(sl)
 
-        return msg(res, 200, { message: "Fetch all data successfully!", data: rd })
+        return msg(res, 200, { message: "Fetch all data successfully!", data: fapts })
     } catch (err) {
         throw new Error(err.message)
     }
 }
 
-// Save data to the patient_services table(บันทึกข้อมูลลงตาราง patient_services)
-exports.createPatientService = async (req, res) => {
+// Function Insert
+exports.CreatePatientService = async (req, res) => {
     try {
-        const psd = req.body
-        const fullname = "Administrator"
+        const ptsd = req.body // ptsd = patient service data
 
         // ตรวจสอบค่าซ้ำ โดยเก็บค่า duplicate message ไว้ก่อน
-        const deplicateStatus = []
-        const duplicateMessages = []
-        let hasEmptyValue = false // Flag สำหรับตรวจสอบค่าที่ว่าง
+        const dpcs = [] // dpcs = deplicate status
+        const dpcms = [] // dpcms = duplicate messages
+        let hev = false // Flag สำหรับตรวจสอบค่าที่ว่าง, hev = has empty value
 
         await Promise.all(
-            Object.entries(psd).map(async ([key, value]) => {
+            Object.entries(ptsd).map(async ([key, value]) => {
                 // ถ้าพบค่าว่าง ให้ตั้งค่า flag เป็น true
-                if (!value) hasEmptyValue = true
+                if (!value) hev = true
 
                 // ตรวจสอบค่าซ้ำเฉพาะ field ที่ไม่ว่าง
                 if (value) {
-                    const existingRecord = await psm.findFirstPatientService(key, value)
-                    if (existingRecord) {
-                        deplicateStatus.push(409)
-                        duplicateMessages.push(`( ${value} ) มีข้อมูลในระบบแล้ว ไม่อนุญาตให้บันทึกข้อมูลซ้ำ!`)
+                    const ffpts = await ptsm.FindFirstPatientService(key, value) // ffpts = find first patient service // ffpts = existing record
+                    if (ffpts) {
+                        dpcs.push(409)
+                        dpcms.push(`( ${value} ) มีข้อมูลในระบบแล้ว ไม่อนุญาตให้บันทึกข้อมูลซ้ำ!`)
                     }
                 }
             })
         )
 
         // ถ้ามีค่าที่ว่าง ให้เพิ่มข้อความแค่ครั้งเดียว
-        if (hasEmptyValue) {
-            duplicateMessages.unshift("กรุณากรอกข้อมูลให้ครบถ้วน!")
-            return msg(res, 400, { message: duplicateMessages[0] })
+        if (hev) {
+            dpcms.unshift("กรุณากรอกข้อมูลให้ครบถ้วน!")
+            return msg(res, 400, { message: dpcms[0] })
         }
 
         // ถ้ามีข้อมูลซ้ำหรือค่าที่ว่าง ให้ส่ง response กลับครั้งเดียว
-        if (duplicateMessages.length > 0) return msg(res, Math.max(...deplicateStatus), { message: duplicateMessages.join(" AND ") })
+        if (dpcms.length > 0) return msg(res, Math.max(...dpcs), { message: dpcms.join(" AND ") })
 
-        psd.created_by = fullname
-        psd.updated_by = fullname
+        ptsd.created_by = req.fullname
+        ptsd.updated_by = req.fullname
 
-        const st = Date.now()
-        console.log(psd)
-        // const rd = await psm.createPatientService(psd)
-        // const et = Date.now() - st
+        const st = Date.now() // st = start time
+        const rd = await ptsm.CreatePatientService(ptsd)
+        const et = Date.now() - st // et = end time
 
-        // // Set and Insert Log
-        // const sl = setLog(req, fullname, et, rd)
-        // await psm.insertLog(sl)
+        // Set and Insert Log
+        const sl = setLog(req, req.fullname, et, rd) // sl = set log
+        await ptsm.InsertLog(sl)
 
         return msg(res, 200, { message: 'Created successfully!' })
+    } catch (err) {
+        throw new Error(err.message)
+    }
+}
+
+// Function FetchOne
+exports.FetchOnePatientServiceById = async (req, res) => {
+    try {
+        const ptsId = req.params.ptsId // ptsId = patient service id
+
+        const st = Date.now() // st = start time
+        const fo = await ptsm.FetchOnePatientServiceById(ptsId)
+        if (!fo) return msg(res, 404, { message: 'Data not found!' })
+        const et = Date.now() - st // et = end time
+
+        // Set and Insert Log
+        const sl = setLog(req, req.fullname, et, fo) // sl = set log
+        await ptsm.InsertLog(sl)
+
+        return msg(res, 200, { data: fo })
+    } catch (err) {
+        throw new Error(err.message)
+    }
+}
+
+// Function Update
+exports.UpdatePatientService = async (req, res) => {
+    try {
+        const ptsId = req.params.ptsId // ptsId = patient service id
+
+        const foptsbi = await ptsm.FetchOnePatientServiceById(ptsId) // foptsbi = fetch one patient service by id
+        if (!foptsbi) return msg(res, 404, { message: 'Data not found!' })
+
+        const ptsd = req.body // ptsd = patient service data
+
+        // ตรวจสอบค่าซ้ำ โดยเก็บค่า duplicate message ไว้ก่อน
+        const dpcs = [] // dpcs = deplicate status
+        const dpcms = [] // dpcms = duplicate messages
+        let hev = false // Flag สำหรับตรวจสอบค่าที่ว่าง, hev = has empty value
+
+        await Promise.all(
+            Object.entries(ptsd).map(async ([key, value]) => {
+                // ถ้าพบค่าว่าง ให้ตั้งค่า flag เป็น true
+                if (!value) hev = true
+
+                // ตรวจสอบค่าซ้ำเฉพาะ field ที่ไม่ว่าง
+                if (value) {
+                    const ffpts = await ptsm.FindFirstPatientService(key, value) // ffpts = find first patient service
+                    if (ffpts) {
+                        dpcs.push(409)
+                        dpcms.push(`( ${value} ) มีข้อมูลในระบบแล้ว ไม่อนุญาตให้บันทึกข้อมูลซ้ำ!`)
+                    }
+                }
+            })
+        )
+
+        // ถ้ามีค่าที่ว่าง ให้เพิ่มข้อความแค่ครั้งเดียว
+        if (hev) {
+            dpcms.unshift("กรุณากรอกข้อมูลให้ครบถ้วน!")
+            return msg(res, 400, { message: dpcms[0] })
+        }
+
+        // ถ้ามีข้อมูลซ้ำหรือค่าที่ว่าง ให้ส่ง response กลับครั้งเดียว
+        if (dpcms.length > 0) return msg(res, Math.max(...dpcs), { message: dpcms.join(" AND ") })
+
+        ptsd.updated_by = req.fullname
+
+        const st = Date.now() // st = start time
+        const ups = await ptsm.UpdatePatientService(ptsId, ptsd)
+        const et = Date.now() - st // et = end time
+
+        // Set and Insert Log
+        const sl = setLog(req, req.fullname, et, ups) // sl = set log
+        await ptsm.InsertLog(sl)
+
+        return msg(res, 200, { message: 'Updated successfully!' })
+    } catch (err) {
+        throw new Error(err.message)
+    }
+}
+
+// Function Delete
+exports.RemovePatientService = async (req, res) => {
+    try {
+        const ptsId = req.params.ptsId // ptsId = patient service id
+
+        const foptsbi = await ptsm.FetchOnePatientServiceById(ptsId) // foptsbi = fetch one patient service by id
+        if (!foptsbi) return msg(res, 404, { message: 'Data not found!' })
+
+        const st = Date.now() // st = start time
+        const rtps = await ptsm.RemovePatientService(ptsId) // rtps = remove patient service
+        const et = Date.now() - st // et = end time
+
+        // Set and Insert Log
+        const sl = setLog(req, req.fullname, et, rtps) // sl = set log
+        await ptsm.InsertLog(sl)
+
+        return msg(res, 200, { message: 'Removed successfully!' })
     } catch (err) {
         throw new Error(err.message)
     }

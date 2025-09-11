@@ -27,7 +27,7 @@ exports.CheckTokenAdmin = async (req, res, next) => {
 
         const cr = await am.CheckRole(decoded.userId)
 
-        if(cr.status != 'ADMIN') return msg(res, 401, { message: 'User นี้ไม่อนุญาตให้เข้าถึงข้อมูล' })
+        if (cr.status != 'ADMIN') return msg(res, 401, { message: 'User นี้ไม่อนุญาตให้เข้าถึงข้อมูล' })
 
         req.user = decoded
 
@@ -58,7 +58,10 @@ exports.CheckTokenUser = async (req, res, next) => {
         const cat = await am.CheckAuthToken(token)
         if (!cat) return msg(res, 401, { message: 'Tokenไม่อนุญาติให้ใช้งาน!' })
 
+        const cr = await am.CheckRole(decoded.userId)
+
         req.user = decoded
+        req.fullname = cr.fullname
         req.token = token
 
         next()

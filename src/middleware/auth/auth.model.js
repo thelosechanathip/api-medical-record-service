@@ -14,7 +14,7 @@ exports.CheckAuthToken = async (token) => {
 
 exports.CheckRole = async (userId) => {
     const [rows] = await db_b.query(
-        "SELECT status FROM users WHERE id = ?", [userId]
+        "SELECT status, name as fullname FROM users WHERE id = ?", [userId]
     )
     return pickFirst(rows)
 }

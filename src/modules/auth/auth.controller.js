@@ -54,7 +54,7 @@ exports.AuthLogin = async (req, res) => {
                 const et = Date.now() - st
 
                 const sl = setLog(req, fur.fullname, et, iat)
-                await am.insertLog(sl)
+                await am.InsertLog(sl)
 
                 if (iat) return msg(res, 200, { token: token })
             } catch (err) {
@@ -93,7 +93,7 @@ exports.VerifyOtp = async (req, res) => {
             const et = Date.now() - st
 
             const sl = setLog(req, fuui.fullname, et, uato)
-            await am.insertLog(sl)
+            await am.InsertLog(sl)
 
             return msg(res, 200, { message: "Login successfully!" })
         }
@@ -117,7 +117,7 @@ exports.Verify = async (req, res) => {
         const et = Date.now() - st
 
         const sl = setLog(req, fuui.fullname, et, fuui)
-        await am.insertLog(sl)
+        await am.InsertLog(sl)
 
         return msg(res, 200, { data: fuui })
     } catch (err) {
@@ -140,7 +140,7 @@ exports.Logout = async (req, res) => {
         const et = Date.now() - st
 
         const sl = setLog(req, fuui.fullname, et, uatoia)
-        await am.insertLog(sl)
+        await am.InsertLog(sl)
 
         return msg(res, 200, { message: 'Logout successfully!' })
     } catch (err) {

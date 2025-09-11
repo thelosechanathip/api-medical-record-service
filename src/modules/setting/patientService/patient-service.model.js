@@ -1,21 +1,15 @@
 const pm = require('../../../libs/prisma')
 
-// Record work data(บันทึกข้อมูลการทำงาน)
-exports.insertLog = async (data) => {
-    return pm.patient_service_logs.create({ data: data })
-}
+exports.InsertLog = async (data) => await pm.patient_service_logs.create({ data: data })
 
-// Retrieve all data from the patient_services table(ดึงข้อมูลทั้งหมดจากตาราง patient_services)
-exports.fetchAllPatientServices = () => {
-    return pm.patient_services.findMany()
-}
+exports.FetchAllPatientServices = async () => await pm.patient_services.findMany()
 
-// Search for infomation by ID in the patient_services table(ค้นหาข้อมูลด้วย ID ในตาราง patient_services)
-exports.findFirstPatientService = (key, value) => {
-    return pm.patient_services.findFirst({ where: { [key]: value } })
-}
+exports.FindFirstPatientService = async (key, value) => await pm.patient_services.findFirst({ where: { [key]: value } })
 
-// Save data to the patient_services table(บันทึกข้อมูลลงตาราง patient_services)
-exports.createPatientService = (data) => {
-    return pm.patient_services.create({ data: data })
-}
+exports.CreatePatientService = async (data) => await pm.patient_services.create({ data: data })
+
+exports.FetchOnePatientServiceById = async (ptsId) => await pm.patient_services.findFirst({ where: { patient_service_id: ptsId } })
+
+exports.UpdatePatientService = async (ptsId, data) => await pm.patient_services.update({ where: { patient_service_id: ptsId }, data: data })
+
+exports.RemovePatientService = async (ptsId) => await pm.patient_services.delete({ where: { patient_service_id: ptsId } })
