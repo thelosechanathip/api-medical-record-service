@@ -2,14 +2,6 @@ const { msg } = require('../../services/message.service')
 const { Verify } = require('../../services/jsonwebtoken')
 const am = require('./auth.model')
 
-/* 
-    นิยามตัวย่อ:
-        am = auth model
-        cblt = check black list token
-        cat = check auth token
-        cr = check role
-*/
-
 exports.CheckTokenAdmin = async (req, res, next) => {
     const authHeader = req.headers.authorization
     if (!authHeader) return msg(res, 400, { message: 'การเข้าถึงถูกปฏิเสธ!' })
@@ -53,10 +45,10 @@ exports.CheckTokenUser = async (req, res, next) => {
         if (!decoded) return msg(res, 401, { message: 'Token ไม่ถูกต้อง!' })
 
         const cblt = await am.CheckBlackListToken(token)
-        if (cblt) return msg(res, 401, { message: 'Tokenไม่อนุญาติให้ใช้งาน!' })
+        if (cblt) return msg(res, 401, { message: 'Tokenไม่อนุญาตให้ใช้งาน!' })
 
         const cat = await am.CheckAuthToken(token)
-        if (!cat) return msg(res, 401, { message: 'Tokenไม่อนุญาติให้ใช้งาน!' })
+        if (!cat) return msg(res, 401, { message: 'Tokenไม่อนุญาตให้ใช้งาน!' })
 
         const cr = await am.CheckRole(decoded.userId)
 

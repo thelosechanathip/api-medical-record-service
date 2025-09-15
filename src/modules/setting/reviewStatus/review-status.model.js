@@ -10,8 +10,8 @@ exports.CheckPatientServiceId = async (ptsId) => await pm.patient_services.findF
 
 exports.InsertReviewStatus = async (data) => await pm.review_status.create({ data: data })
 
-exports.FetchOneReviewStatusById = async (rstId) => await pm.review_status.findFirst({ where: { review_status_id: rstId } })
+exports.FetchOneReviewStatusById = async (id) => await pm.review_status.findFirst({ where: { review_status_id: id } })
 
-exports.UpdateReviewStatus = async (rstId, data) => await pm.review_status.update({ where: { review_status_id: rstId }, data: data })
+exports.UpdateReviewStatus = async (id, data) => await pm.review_status.update({ where: { review_status_id: id }, data: data })
 
-exports.RemoveReviewStatus = async (rstId) => await pm.review_status.delete({ where: { review_status_id: rstId } })
+exports.RemoveReviewStatus = async (id) => await pm.review_status.delete({ where: { review_status_id: id } })

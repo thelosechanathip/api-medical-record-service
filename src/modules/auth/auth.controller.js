@@ -45,25 +45,21 @@ exports.AuthLogin = async (req, res) => {
         await sendTelegramMessage(ftr.chat_id, otpCode, botToken.token)
 
         if (token) {
-            try {
-                const dataToken = await Verify(token)
-                const exp = new Date(dataToken.exp * 1000) // คูณ 1000 เพราะ timestamp เป็นวินาที แต่ Date ใช้มิลลิวินาที
+            const dataToken = await Verify(token)
+            const exp = new Date(dataToken.exp * 1000) // คูณ 1000 เพราะ timestamp เป็นวินาที แต่ Date ใช้มิลลิวินาที
 
-                const st = Date.now()
-                const iat = await am.InsertAuthtoken({ token: token, user_id: fur.id, expires_at: exp })
-                const et = Date.now() - st
+            const st = Date.now()
+            const iat = await am.InsertAuthtoken({ token: token, user_id: fur.id, expires_at: exp })
+            const et = Date.now() - st
 
-                const sl = setLog(req, fur.fullname, et, iat)
-                await am.InsertLog(sl)
+            const sl = setLog(req, fur.fullname, et, iat)
+            await am.InsertLog(sl)
 
-                if (iat) return msg(res, 200, { token: token })
-            } catch (err) {
-                console.error("Error token:", err.message)
-                return msg(res, 500, { message: "Internal Server Error" })
-            }
+            if (iat) return msg(res, 200, { token: token })
         }
     } catch (err) {
-        throw new Error(err.message)
+        console.log('AuthLogin : ', err)
+        return msg(res, 500, { message: err.message })
     }
 }
 
@@ -121,7 +117,8 @@ exports.Verify = async (req, res) => {
 
         return msg(res, 200, { data: fuui })
     } catch (err) {
-        throw new Error(err.message)
+        console.log('Verify : ', err)
+        return msg(res, 500, { message: err.message })
     }
 }
 
@@ -144,6 +141,7 @@ exports.Logout = async (req, res) => {
 
         return msg(res, 200, { message: 'Logout successfully!' })
     } catch (err) {
-        throw new Error(err.message)
+        console.log('Logout : ', err)
+        return msg(res, 500, { message: err.message })
     }
 }

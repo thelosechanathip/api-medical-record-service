@@ -1,30 +1,30 @@
 const { msg } = require('../../../services/message.service')
 const { setLog } = require('../../../services/setLog.service')
-const rstm = require('./review-status.model') // rstm = review status model
+const comrm = require('./content-of-medical-record.model') // comrm = content of medical record model
 
 // Function FetchAll
-exports.FetchAllReviewStatus = async (req, res) => {
+exports.FetchAllContentOfMedicalRecords = async (req, res) => {
     try {
         const startTime = Date.now()
-        const fars = await rstm.FetchAllReviewStatus() // fapts = fetch all review status
-        if (fars.length === 0) return msg(res, 404, { message: 'Data not found!' })
+        const facomr = await comrm.FetchAllContentOfMedicalRecords() // facomr = fetch all content of medical records
         const endTime = Date.now() - startTime
 
         // Set and Insert Log
-        const sl = setLog(req, req.fullname, endTime, fars)
-        await rstm.InsertLog(sl)
+        const sl = setLog(req, req.fullname, endTime, facomr)
+        await comrm.InsertLog(sl)
 
-        return msg(res, 200, { message: "Fetch all data successfully!", data: fars })
+        if (facomr.length === 0) return msg(res, 404, { message: 'Data not found!' })
+        return msg(res, 200, { message: "Fetch all data successfully!", data: facomr })
     } catch (err) {
-        console.log('FetchAllReviewStatus : ', err)
+        console.log('FetchAllContentOfMedicalRecords : ', err)
         return msg(res, 500, { message: err.message })
     }
 }
 
 // Function Insert
-exports.InsertReviewStatus = async (req, res) => {
+exports.InsertContentOfMedicalRecord = async (req, res) => {
     try {
-        const rstd = req.body
+        const comrd = req.body
 
         // ตรวจสอบค่าซ้ำ โดยเก็บค่า duplicate message ไว้ก่อน
         const duplicateStatus = []
@@ -32,21 +32,19 @@ exports.InsertReviewStatus = async (req, res) => {
         let hasEmptyValue = false // Flag สำหรับตรวจสอบค่าที่ว่าง
 
         await Promise.all(
-            Object.entries(rstd).map(async ([key, value]) => {
+            Object.entries(comrd).map(async ([key, value]) => {
                 // ถ้าพบค่าว่าง ให้ตั้งค่า flag เป็น true
-                if (!value && key !== 'review_status_type') hasEmptyValue = true
-
-                // ตรวจสอบค่าซ้ำเฉพาะ field ที่ไม่ว่าง
-                if (value && key === 'review_status_name') {
-                    const cu = await rstm.CheckUnique(key, value) // cu = CheckUnique
+                if (!value && key == 'content_of_medical_record_name') hasEmptyValue = true
+                if (value && key == 'content_of_medical_record_name') {
+                    const cu = await comrm.CheckUnique(key, value) // cu = CheckUnique
                     if (cu) {
                         duplicateStatus.push(409)
                         duplicateMessage.push(`( ${value} ) มีข้อมูลในระบบแล้ว ไม่อนุญาตให้บันทึกข้อมูลซ้ำ!`)
                     }
                 }
 
-                if (value && key === 'patient_service_id') {
-                    const cptsi = await rstm.CheckPatientServiceId(value) // cptsi = check patient service id
+                if (value && key == 'patient_service_id') {
+                    const cptsi = await comrm.CheckPatientServiceId(key, value) // cptsi = check patient service id
                     if (!cptsi) {
                         duplicateStatus.push(404)
                         duplicateMessage.push(`ไม่มีข้อมูลคำระบุของกลุ่มคนไข้ที่เลือกมากรุณาตรวจสอบ!`)
@@ -64,53 +62,53 @@ exports.InsertReviewStatus = async (req, res) => {
         // ถ้ามีข้อมูลซ้ำหรือค่าที่ว่าง ให้ส่ง response กลับครั้งเดียว
         if (duplicateMessage.length > 0) return msg(res, Math.max(...duplicateStatus), { message: duplicateMessage.join(" AND ") })
 
-        rstd.created_by = req.fullname
-        rstd.updated_by = req.fullname
+        comrd.created_by = req.fullname
+        comrd.updated_by = req.fullname
 
         const startTime = Date.now()
-        const irst = await rstm.InsertReviewStatus(rstd) // irst = insert review status
+        const icomr = await comrm.InsertContentOfMedicalRecord(comrd)
         const endTime = Date.now() - startTime
 
         // Set and Insert Log
-        const sl = setLog(req, req.fullname, endTime, irst)
-        await rstm.InsertLog(sl)
+        const sl = setLog(req, req.fullname, endTime, icomr)
+        await comrm.InsertLog(sl)
 
         return msg(res, 200, { message: 'Created successfully!' })
     } catch (err) {
-        console.log('InsertReviewStatus : ', err)
+        console.log('InsertContentOfMedicalRecord : ', err)
         return msg(res, 500, { message: err.message })
     }
 }
 
 // Function FetchOne
-exports.FetchOneReviewStatusById = async (req, res) => {
+exports.FetchOneContentOfMedicalRecordById = async (req, res) => {
     try {
-        const rstId = req.params.rstId // rstId = review status id
+        const comrId = req.params.comrId // comrId = content of medical record id
 
         const startTime = Date.now()
-        const forstbi = await rstm.FetchOneReviewStatusById(rstId) // forstbi = fetch one review status by id
-        if (!forstbi) return msg(res, 404, { message: 'Data not found!' })
+        const focomr = await comrm.FetchOneContentOfMedicalRecordById(comrId) // focomr = fetch one content of medical record by id
+        if (!focomr) return msg(res, 404, { message: 'Data not found!' })
         const endTime = Date.now() - startTime
 
         // Set and Insert Log
-        const sl = setLog(req, req.fullname, endTime, forstbi)
-        await rstm.InsertLog(sl)
+        const sl = setLog(req, req.fullname, endTime, focomr)
+        await comrm.InsertLog(sl)
 
-        return msg(res, 200, { data: forstbi })
+        return msg(res, 200, { data: focomr })
     } catch (err) {
-        console.log('FetchOneReviewStatusById : ', err)
+        console.log('FetchOneContentOfMedicalRecordById : ', err)
         return msg(res, 500, { message: err.message })
     }
 }
 
 // Function Update
-exports.UpdateReviewStatus = async (req, res) => {
+exports.UpdateContentOfMedicalRecord = async (req, res) => {
     try {
-        const rstId = req.params.rstId // rstId = review status id
-        const forstbi = await rstm.FetchOneReviewStatusById(rstId) // forstbi = fetch one review status by id
-        if (!forstbi) return msg(res, 404, { message: 'Data not found!' })
+        const comrId = req.params.comrId // comrId = content of medical record id
+        const focomr = await comrm.FetchOneContentOfMedicalRecordById(comrId) // focomr = fetch one content of medical record by id
+        if (!focomr) return msg(res, 404, { message: 'Data not found!' })
 
-        const rstd = req.body
+        const comrd = req.body
 
         // ตรวจสอบค่าซ้ำ โดยเก็บค่า duplicate message ไว้ก่อน
         const duplicateStatus = []
@@ -118,21 +116,19 @@ exports.UpdateReviewStatus = async (req, res) => {
         let hasEmptyValue = false // Flag สำหรับตรวจสอบค่าที่ว่าง
 
         await Promise.all(
-            Object.entries(rstd).map(async ([key, value]) => {
+            Object.entries(comrd).map(async ([key, value]) => {
                 // ถ้าพบค่าว่าง ให้ตั้งค่า flag เป็น true
-                if (!value && key !== 'review_status_type') hasEmptyValue = true
-
-                // ตรวจสอบค่าซ้ำเฉพาะ field ที่ไม่ว่าง
-                if (value && key === 'review_status_name') {
-                    const cu = await rstm.CheckUnique(key, value) // cu = CheckUnique
+                if (!value && key == 'content_of_medical_record_name') hasEmptyValue = true
+                if (value && key == 'content_of_medical_record_name') {
+                    const cu = await comrm.CheckUnique(key, value) // cu = CheckUnique
                     if (cu) {
                         duplicateStatus.push(409)
                         duplicateMessage.push(`( ${value} ) มีข้อมูลในระบบแล้ว ไม่อนุญาตให้บันทึกข้อมูลซ้ำ!`)
                     }
                 }
 
-                if (value && key === 'patient_service_id') {
-                    const cptsi = await rstm.CheckPatientServiceId(value) // cptsi = check patient service id
+                if (value && key == 'patient_service_id') {
+                    const cptsi = await comrm.CheckPatientServiceId(key, value) // cptsi = check patient service id
                     if (!cptsi) {
                         duplicateStatus.push(404)
                         duplicateMessage.push(`ไม่มีข้อมูลคำระบุของกลุ่มคนไข้ที่เลือกมากรุณาตรวจสอบ!`)
@@ -150,41 +146,41 @@ exports.UpdateReviewStatus = async (req, res) => {
         // ถ้ามีข้อมูลซ้ำหรือค่าที่ว่าง ให้ส่ง response กลับครั้งเดียว
         if (duplicateMessage.length > 0) return msg(res, Math.max(...duplicateStatus), { message: duplicateMessage.join(" AND ") })
 
-        rstd.updated_by = req.fullname
+        comrd.updated_by = req.fullname
 
         const startTime = Date.now()
-        const urst = await rstm.UpdateReviewStatus(rstId, rstd) // urst = update review status
+        const ucomr = await comrm.UpdateContentOfMedicalRecord(comrId, comrd) // ucomr = update content of medical record
         const endTime = Date.now() - startTime
 
         // Set and Insert Log
-        const sl = setLog(req, req.fullname, endTime, urst)
-        await rstm.InsertLog(sl)
+        const sl = setLog(req, req.fullname, endTime, ucomr)
+        await comrm.InsertLog(sl)
 
         return msg(res, 200, { message: 'Updated successfully!' })
     } catch (err) {
-        console.log('UpdateReviewStatus : ', err)
+        console.log('UpdateContentOfMedicalRecord : ', err)
         return msg(res, 500, { message: err.message })
     }
 }
 
 // Function Delete
-exports.RemoveReviewStatus = async (req, res) => {
+exports.RemoveContentOfMedicalRecord = async (req, res) => {
     try {
-        const rstId = req.params.rstId // rstId = review status id
-        const forstbi = await rstm.FetchOneReviewStatusById(rstId) // forstbi = fetch one review status by id
-        if (!forstbi) return msg(res, 404, { message: 'Data not found!' })
+        const comrId = req.params.comrId // comrId = content of medical record id
+        const focomr = await comrm.FetchOneContentOfMedicalRecordById(comrId) // focomr = fetch one content of medical record by id
+        if (!focomr) return msg(res, 404, { message: 'Data not found!' })
 
         const startTime = Date.now()
-        const rrst = await rstm.RemoveReviewStatus(rstId) // rrst = remove review status
+        const rcomr = await comrm.RemoveContentOfMedicalRecord(comrId) // rcomr = remove content of medical record
         const endTime = Date.now() - startTime
 
         // Set and Insert Log
-        const sl = setLog(req, req.fullname, endTime, rrst)
-        await rstm.InsertLog(sl)
+        const sl = setLog(req, req.fullname, endTime, rcomr)
+        await comrm.InsertLog(sl)
 
         return msg(res, 200, { message: 'Removed successfully!' })
     } catch (err) {
-        console.log('RemoveReviewStatus : ', err)
+        console.log('RemoveContentOfMedicalRecord : ', err)
         return msg(res, 500, { message: err.message })
     }
 }

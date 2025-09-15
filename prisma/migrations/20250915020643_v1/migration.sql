@@ -144,8 +144,55 @@ CREATE TABLE `review_status_logs` (
     PRIMARY KEY (`review_status_log_id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
+-- CreateTable
+CREATE TABLE `content_of_medical_records` (
+    `content_of_medical_record_id` VARCHAR(191) NOT NULL,
+    `content_of_medical_record_name` VARCHAR(100) NOT NULL,
+    `na_type` BOOLEAN NOT NULL DEFAULT false,
+    `missing_type` BOOLEAN NOT NULL DEFAULT false,
+    `no_type` BOOLEAN NOT NULL DEFAULT false,
+    `criterion_number_1_type` BOOLEAN NOT NULL DEFAULT false,
+    `criterion_number_2_type` BOOLEAN NOT NULL DEFAULT false,
+    `criterion_number_3_type` BOOLEAN NOT NULL DEFAULT false,
+    `criterion_number_4_type` BOOLEAN NOT NULL DEFAULT false,
+    `criterion_number_5_type` BOOLEAN NOT NULL DEFAULT false,
+    `criterion_number_6_type` BOOLEAN NOT NULL DEFAULT false,
+    `criterion_number_7_type` BOOLEAN NOT NULL DEFAULT false,
+    `criterion_number_8_type` BOOLEAN NOT NULL DEFAULT false,
+    `criterion_number_9_type` BOOLEAN NOT NULL DEFAULT false,
+    `points_deducted_type` BOOLEAN NOT NULL DEFAULT false,
+    `patient_service_id` VARCHAR(191) NULL,
+    `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `created_by` VARCHAR(191) NULL DEFAULT 'admin',
+    `updated_at` DATETIME(3) NOT NULL,
+    `updated_by` VARCHAR(191) NULL DEFAULT 'admin',
+
+    UNIQUE INDEX `content_of_medical_records_content_of_medical_record_name_key`(`content_of_medical_record_name`),
+    PRIMARY KEY (`content_of_medical_record_id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `content_of_medical_record_logs` (
+    `content_of_medical_record_log_id` VARCHAR(191) NOT NULL,
+    `ip_address` VARCHAR(191) NOT NULL,
+    `name` VARCHAR(191) NOT NULL,
+    `request_method` VARCHAR(191) NOT NULL,
+    `endpoint` VARCHAR(191) NOT NULL,
+    `execution_time` INTEGER NOT NULL,
+    `row_count` INTEGER NULL,
+    `status` VARCHAR(191) NOT NULL,
+    `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+
+    INDEX `content_of_medical_record_logs_created_at_idx`(`created_at`),
+    INDEX `content_of_medical_record_logs_endpoint_idx`(`endpoint`),
+    PRIMARY KEY (`content_of_medical_record_log_id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
 -- AddForeignKey
 ALTER TABLE `patients` ADD CONSTRAINT `patients_hcode_id_fkey` FOREIGN KEY (`hcode_id`) REFERENCES `hcodes`(`hcode_id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `review_status` ADD CONSTRAINT `review_status_patient_service_id_fkey` FOREIGN KEY (`patient_service_id`) REFERENCES `patient_services`(`patient_service_id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `content_of_medical_records` ADD CONSTRAINT `content_of_medical_records_patient_service_id_fkey` FOREIGN KEY (`patient_service_id`) REFERENCES `patient_services`(`patient_service_id`) ON DELETE RESTRICT ON UPDATE CASCADE;

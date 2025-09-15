@@ -7,20 +7,13 @@ const pino = require("pino")
 const schedule = require("node-schedule")
 const am = require('./app.model')
 const moment = require('moment')
-// const pinoHttp = require("pino-http")
 require("dotenv").config()
-
-/*
-    นิยามตัวย่อ:
-        fatb = fetch all token blacklist
-        am = app model
-        faat = fetch all auth token
-*/
 
 // All Routes
 const auth = require('./modules/auth/auth.route')
 const spts = require('./modules/setting/patientService/patient-service.route')
 const srst = require('./modules/setting/reviewStatus/review-status.route')
+const scomr = require('./modules/setting/contentOfMedicalRecord/content-of-medical-record.route')
 
 // Services
 const { msg } = require('./services/message.service')
@@ -35,12 +28,9 @@ const BASE_PATH = (process.env.BASE_PATH || 'api').replace(/^\/+|\/+$/g, '') // 
 app.disable('x-powered-by')            // ลดข้อมูลแฉ framework
 app.set('trust proxy', 1)              // ใช้ถ้าอยู่หลัง Nginx/HAProxy
 
-// Logger แบบเบากว่า morgan (ลด GC/p99)
-const logger = pino({ level: process.env.LOG_LEVEL || 'info' })
-// app.use(pinoHttp({ logger }))
-
 // Security headers (เบา, ค่ามาตรฐาน)
 app.use(helmet())
+// app.use(helmet({ contentSecurityPolicy: false }))
 
 // Response-Time header (ดู latency เร็ว ๆ)
 app.use(responseTime())
@@ -69,6 +59,7 @@ app.get('/ready', (_req, res) => res.status(200).send('ready'))
 app.use(`/${BASE_PATH}/auth`, auth)
 app.use(`/${BASE_PATH}/setting`, spts)
 app.use(`/${BASE_PATH}/setting`, srst)
+app.use(`/${BASE_PATH}/setting`, scomr)
 
 // 404 NOT FOUND — ตอบให้ไว
 app.use((_, res) => msg(res, 404, { message: "404 NOT FOUND" }))

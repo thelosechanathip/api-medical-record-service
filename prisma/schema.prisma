@@ -80,14 +80,15 @@ model patients {
 
 // ตารางเก็บข้อมูลคำระบุของกลุ่มคนไข้
 model patient_services {
-  patient_service_id           String          @id @default(uuid())
-  patient_service_name_english String          @unique // ชื่อคำระบุของกลุ่มคนไข้อังกฤษ
-  patient_service_name_thai    String          @unique // ชื่อคำระบุของกลุ่มคนไข้ไทย
-  created_at                   DateTime        @default(now()) // วัน-เวลาที่บันทึก
-  created_by                   String?         @default("admin") // ชื่อผู้บันทึก
-  updated_at                   DateTime        @updatedAt // วัน-เวลาที่อัพเดท
-  updated_by                   String?         @default("admin") // ชื่อผู้อัพเดท
-  review_statuses              review_status[]
+  patient_service_id           String                       @id @default(uuid())
+  patient_service_name_english String                       @unique // ชื่อคำระบุของกลุ่มคนไข้อังกฤษ
+  patient_service_name_thai    String                       @unique // ชื่อคำระบุของกลุ่มคนไข้ไทย
+  created_at                   DateTime                     @default(now()) // วัน-เวลาที่บันทึก
+  created_by                   String?                      @default("admin") // ชื่อผู้บันทึก
+  updated_at                   DateTime                     @updatedAt // วัน-เวลาที่อัพเดท
+  updated_by                   String?                      @default("admin") // ชื่อผู้อัพเดท
+  review_status                review_status[]
+  content_of_medical_records   content_of_medical_records[]
 }
 
 // Log การทำงานของ patient_services
@@ -131,6 +132,47 @@ model review_status_logs {
   row_count            Int? // จำนวนข้อมูลทั้งหมด
   status               String // สถานะการทำงาน
   created_at           DateTime @default(now()) // วัน-เวลาที่บันทึก
+
+  @@index([created_at])
+  @@index([endpoint])
+}
+
+// ตารางเก็บข้อมูลเนื้อหาของเวชระเบียน( true: จำเป็น, false: ไม่จำเป็น )
+model content_of_medical_records {
+  content_of_medical_record_id   String            @id @default(uuid())
+  content_of_medical_record_name String            @unique @db.VarChar(100) // ชื่อเนื้อหาของเวชระเบียน
+  na_type                        Boolean?          @default(false) // ประเภทของ NA
+  missing_type                   Boolean?          @default(false) // ประเภทของ Missing
+  no_type                        Boolean?          @default(false) // ประเภทของ No
+  criterion_number_1_type        Boolean?          @default(false) // ประเภทของ criterion_number_1
+  criterion_number_2_type        Boolean?          @default(false) // ประเภทของ criterion_number_2
+  criterion_number_3_type        Boolean?          @default(false) // ประเภทของ criterion_number_3
+  criterion_number_4_type        Boolean?          @default(false) // ประเภทของ criterion_number_4
+  criterion_number_5_type        Boolean?          @default(false) // ประเภทของ criterion_number_5
+  criterion_number_6_type        Boolean?          @default(false) // ประเภทของ criterion_number_6
+  criterion_number_7_type        Boolean?          @default(false) // ประเภทของ criterion_number_7
+  criterion_number_8_type        Boolean?          @default(false) // ประเภทของ criterion_number_8
+  criterion_number_9_type        Boolean?          @default(false) // ประเภทของ criterion_number_9
+  points_deducted_type           Boolean?          @default(false) // ประเภทของคะแนนที่ถูกหัก
+  patient_services               patient_services? @relation(fields: [patient_service_id], references: [patient_service_id], onDelete: Restrict)
+  patient_service_id             String? // Foreign Key ของตาราง patient_services( ข้อมูลคำระบุของกลุ่มคนไข้ )
+  created_at                     DateTime          @default(now()) // วัน-เวลาที่บันทึก
+  created_by                     String?           @default("admin") // ชื่อผู้บันทึก
+  updated_at                     DateTime          @updatedAt // วัน-เวลาที่อัพเดท
+  updated_by                     String?           @default("admin") // ชื่อผู้อัพเดท
+}
+
+// Log การทำงานของ content_of_medical_record
+model content_of_medical_record_logs {
+  content_of_medical_record_log_id String   @id @default(uuid())
+  ip_address                       String // ip_address ของผู้ใช้งาน
+  name                             String // ชื่อผู้ใช้งาน
+  request_method                   String // method ที่ผู้ใช้งานใช้
+  endpoint                         String // path api ที่ผู้ใช้งานใช้
+  execution_time                   Int // เวลาในการ Query
+  row_count                        Int? // จำนวนข้อมูลทั้งหมด
+  status                           String // สถานะการทำงาน
+  created_at                       DateTime @default(now()) // วัน-เวลาที่บันทึก
 
   @@index([created_at])
   @@index([endpoint])
