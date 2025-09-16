@@ -26,6 +26,9 @@ exports.RemovePatient = async (an) =>
 // Fetch Start #################################################################################################################################
 exports.FetchHcode = async () => await pm.hcodes.findFirst({ select: { hcode_id: true } })
 
+exports.FetchOnePatientService = async () =>
+    await pm.patient_services.findFirst({ select: { patient_service_id: true }, where: { patient_service_name_english: 'IPD' } })
+
 exports.FetchPatientInMra = async (key, value) =>
     await pm.patients.findFirst({ where: { [key]: value }, select: { patient_id: true } })
 
@@ -102,8 +105,18 @@ exports.FetchPatientInHos = async (patient_an) => {
     )
     return pickFirst(rows)
 }
+
+exports.FetchContentOfMedicalRecordById = async (patient_service_id) => {
+    return await pm.content_of_medical_records.findMany({
+        where: { patient_service_id: patient_service_id },
+        select: { content_of_medical_record_id: true, content_of_medical_record_name: true },
+        orderBy: { created_at: 'asc' }
+    })
+}
 // Fetch End #################################################################################################################################
 
 // Insert Start #################################################################################################################################
 exports.InsertPatient = async (data) => await pm.patients.create({ data: { ...data } })
+
+exports.InsertFormIpd = async (data) => await pm.form_ipds.create({ data: { ...data } })
 // Insert End #################################################################################################################################

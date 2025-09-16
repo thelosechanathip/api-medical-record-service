@@ -161,6 +161,7 @@ CREATE TABLE `content_of_medical_records` (
     `criterion_number_8_type` BOOLEAN NULL DEFAULT false,
     `criterion_number_9_type` BOOLEAN NULL DEFAULT false,
     `points_deducted_type` BOOLEAN NULL DEFAULT false,
+    `priority` INTEGER NOT NULL,
     `patient_service_id` VARCHAR(191) NOT NULL,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `created_by` VARCHAR(191) NULL DEFAULT 'admin',

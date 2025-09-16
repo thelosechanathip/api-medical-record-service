@@ -62,6 +62,10 @@ exports.InsertContentOfMedicalRecord = async (req, res) => {
         // ถ้ามีข้อมูลซ้ำหรือค่าที่ว่าง ให้ส่ง response กลับครั้งเดียว
         if (duplicateMessage.length > 0) return msg(res, Math.max(...duplicateStatus), { message: duplicateMessage.join(" AND ") })
 
+        const cPriority = await comrm.CheckPriority(comrd.patient_service_id)
+        if (cPriority) comrd.priority = cPriority.priority + 1
+        else comrd.priority = 1
+
         comrd.created_by = req.fullname
         comrd.updated_by = req.fullname
 

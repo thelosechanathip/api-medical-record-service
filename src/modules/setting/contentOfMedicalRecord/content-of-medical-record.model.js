@@ -8,6 +8,9 @@ exports.CheckUnique = async (key, value) => await pm.content_of_medical_records.
 
 exports.CheckPatientServiceId = async (key, value) => await pm.patient_services.findFirst({ where: { [key]: value } })
 
+exports.CheckPriority = async (patient_service_id) =>
+    await pm.content_of_medical_records.findFirst({ where: { patient_service_id: patient_service_id }, orderBy: { priority: 'desc' } })
+
 exports.InsertContentOfMedicalRecord = async (data) => await pm.content_of_medical_records.create({ data: data })
 
 exports.FetchOneContentOfMedicalRecordById = async (id) =>

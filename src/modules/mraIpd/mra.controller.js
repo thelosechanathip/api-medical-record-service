@@ -14,6 +14,8 @@ exports.cleanupFailInsert = async (...args) => {
 
 exports.generateForm = async (req, res) => {
     const mraD = req.body
+    const ps = await mraM.FetchOnePatientService()
+
     try {
         const fh = await mraM.FetchHcode()
         const fullnamePayload = {
@@ -75,12 +77,18 @@ exports.generateForm = async (req, res) => {
 
         const startTime = Date.now()
         const ip = await mraM.InsertPatient(pPayload)
-        // if (ip) {
-        //     const fiPayload = {
-        //         patient_id: ip.patient_id,
-        //         ...fullnamePayload
-        //     }
-        // }
+        if (ip) {
+            const fiPayload = {
+                patient_id: ip.patient_id,
+                ...fullnamePayload
+            }
+
+            const ifi = await mraM.InsertFormIpd(fiPayload)
+            if (ifi) {
+                const fcomri = await mraM.FetchContentOfMedicalRecordById(ps.patient_service_id)
+                console.log(fcomri)
+            }
+        }
 
         return msg(res, 200, { message: ip })
     } catch (err) {

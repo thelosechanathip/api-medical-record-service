@@ -20,7 +20,7 @@ const scomr = require('./modules/setting/contentOfMedicalRecord/content-of-medic
 const sof = require('./modules/setting/overallFinding/overall-finding.route')
 
 // MRA
-const mraR = require('./modules/mra/mra.route')
+const mraIpd = require('./modules/mraIpd/mra.route')
 
 // Services
 const { msg } = require('./services/message.service')
@@ -68,7 +68,7 @@ app.use(`/${BASE_PATH}/setting`, spts)
 app.use(`/${BASE_PATH}/setting`, srst)
 app.use(`/${BASE_PATH}/setting`, scomr)
 app.use(`/${BASE_PATH}/setting`, sof)
-app.use(`/${BASE_PATH}`, mraR)
+app.use(`/${BASE_PATH}`, mraIpd)
 
 // 404 NOT FOUND — ตอบให้ไว
 app.use((_, res) => msg(res, 404, { message: "404 NOT FOUND" }))

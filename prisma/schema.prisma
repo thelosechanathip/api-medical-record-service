@@ -157,6 +157,7 @@ model content_of_medical_records {
   criterion_number_8_type                    Boolean?                                     @default(false) // ประเภทของ criterion_number_8
   criterion_number_9_type                    Boolean?                                     @default(false) // ประเภทของ criterion_number_9
   points_deducted_type                       Boolean?                                     @default(false) // ประเภทของคะแนนที่ถูกหัก
+  priority                                   Int // ลำดับความสำคัญ
   patient_services                           patient_services                             @relation(fields: [patient_service_id], references: [patient_service_id], onDelete: Restrict)
   patient_service_id                         String // Foreign Key ของตาราง patient_services( ข้อมูลคำระบุของกลุ่มคนไข้ )
   created_at                                 DateTime                                     @default(now()) // วัน-เวลาที่บันทึก
