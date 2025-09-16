@@ -1,20 +1,109 @@
-const pm = require('../../../libs/prisma')
+const pm = require('../../libs/prisma')
+const db_h = require('../../libs/db_h')
+
+// ---------- Helpers ----------
+const pickFirst = (rows) => (Array.isArray(rows) && rows.length ? rows[0] : null)
 
 exports.InsertLog = async (data) => await pm.content_of_medical_record_logs.create({ data: data })
 
-// Remove Start
-exports.removeFormIpdReviewStatusResult = async (form_ipd_id) => 
-    await pm.form_ipd_review_status_results.deleteMany({ where: { form_ipd_id: Number(form_ipd_id) } })
+// Remove Start #################################################################################################################################
+exports.RemoveFormIpdReviewStatusResult = async (form_ipd_id) =>
+    await pm.form_ipd_review_status_results.deleteMany({ where: { form_ipd_id: form_ipd_id } })
 
-exports.removeFormIpdOverallFindingResult = async (form_ipd_id) =>
-    await pm.form_ipd_overall_finding_results.deleteMany({ where: { form_ipd_id: Number(form_ipd_id) } })
+exports.RemoveFormIpdOverallFindingResult = async (form_ipd_id) =>
+    await pm.form_ipd_overall_finding_results.deleteMany({ where: { form_ipd_id: form_ipd_id } })
 
-exports.removeFormIpdContentOfMedicalRecordResult = async (form_ipd_id) =>
-    await pm.form_ipd_content_of_medical_record_results.deleteMany({ where: { form_ipd_id: Number(form_ipd_id) } })
+exports.RemoveFormIpdContentOfMedicalRecordResult = async (form_ipd_id) =>
+    await pm.form_ipd_content_of_medical_record_results.deleteMany({ where: { form_ipd_id: form_ipd_id } })
 
-exports.removeFormIpd = async (form_ipd_id) =>
+exports.RemoveFormIpd = async (form_ipd_id) =>
     await pm.form_ipds.delete({ where: { form_ipd_id: form_ipd_id } })
 
-exports.removePatient = async (an) =>
+exports.RemovePatient = async (an) =>
     await pm.patients.delete({ where: { patient_an: an }, select: { patient_id: true } })
-// Remove End
+// Remove End #################################################################################################################################
+
+// Fetch Start #################################################################################################################################
+exports.FetchHcode = async () => await pm.hcodes.findFirst({ select: { hcode_id: true } })
+
+exports.FetchPatientInMra = async (key, value) =>
+    await pm.patients.findFirst({ where: { [key]: value }, select: { patient_id: true } })
+
+exports.FetchOneFormIpdIdByPatientId = async (patient_id) =>
+    await pm.form_ipds.findFirst({ where: { patient_id: patient_id }, select: { form_ipd_id: true } })
+
+exports.FetchFormIRSRInMra = async (form_ipd_id) => {
+    return await pm.form_ipd_review_status_results.findFirst({
+        where: { form_ipd_id: form_ipd_id },
+        select: { review_status_id: true }
+    })
+}
+
+exports.FetchOneData = async (patient_id) => {
+    return await pm.form_ipds.findMany({
+        where: {
+            patient_id: patient_id
+        },
+        include: {
+            patient_id: false,
+            patients: {
+                include: {
+                    hcode_id: false,
+                    hcodes: {
+                        select: {
+                            hcode_id: true,
+                            hcode_name: true
+                        }
+                    }
+                }
+            },
+            form_ipd_content_of_medical_record_results: {
+                include: {
+                    content_of_medical_record_id: false,
+                    content_of_medical_records: {}
+                }
+            },
+            form_ipd_overall_finding_results: {
+                include: {
+                    overall_finding_id: false,
+                    overall_finding: {}
+                }
+            },
+            form_ipd_review_status_results: {
+                include: {
+                    review_status_id: false,
+                    review_status: {}
+                }
+            }
+        }
+    })
+}
+
+exports.FetchPatientInHos = async (patient_an) => {
+    const [rows] = await db_h.query(
+        `
+            SELECT
+                CONCAT(pt.pname, pt.fname, ' ', pt.lname) AS fullname,
+                o.hn,
+                o.vn,
+                i.an,
+                w.name AS ward_name,
+                o.vstdate,
+                i.regdate,
+                i.dchdate
+            FROM
+                ovst AS o
+                LEFT OUTER JOIN ipt AS i ON o.vn = i.vn
+                LEFT OUTER JOIN ward AS w ON i.ward = w.ward
+                LEFT OUTER JOIN patient AS pt ON i.hn = pt.hn
+            WHERE
+                i.an = ?
+        `, [patient_an]
+    )
+    return pickFirst(rows)
+}
+// Fetch End #################################################################################################################################
+
+// Insert Start #################################################################################################################################
+exports.InsertPatient = async (data) => await pm.patients.create({ data: { ...data } })
+// Insert End #################################################################################################################################

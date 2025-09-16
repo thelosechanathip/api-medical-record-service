@@ -51,7 +51,8 @@ exports.FetchUserByUserId = async (userId) => {
         `
             SELECT
                 u.name AS fullname,
-                u.status
+                u.status,
+                u.email
             FROM
                 users AS u
             WHERE

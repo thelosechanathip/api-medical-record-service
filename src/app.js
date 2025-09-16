@@ -10,11 +10,17 @@ const moment = require('moment')
 require("dotenv").config()
 
 // All Routes
+// Auth
 const auth = require('./modules/auth/auth.route')
+
+// Setting
 const spts = require('./modules/setting/patientService/patient-service.route')
 const srst = require('./modules/setting/reviewStatus/review-status.route')
 const scomr = require('./modules/setting/contentOfMedicalRecord/content-of-medical-record.route')
 const sof = require('./modules/setting/overallFinding/overall-finding.route')
+
+// MRA
+const mraR = require('./modules/mra/mra.route')
 
 // Services
 const { msg } = require('./services/message.service')
@@ -62,6 +68,7 @@ app.use(`/${BASE_PATH}/setting`, spts)
 app.use(`/${BASE_PATH}/setting`, srst)
 app.use(`/${BASE_PATH}/setting`, scomr)
 app.use(`/${BASE_PATH}/setting`, sof)
+app.use(`/${BASE_PATH}`, mraR)
 
 // 404 NOT FOUND — ตอบให้ไว
 app.use((_, res) => msg(res, 404, { message: "404 NOT FOUND" }))

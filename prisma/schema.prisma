@@ -69,9 +69,9 @@ model patients {
   patient_vn              String?     @unique // หมายเลขการเข้ารักษาตัวในโรงพยาบาล
   patient_an              String?     @unique // หมายเลขการนอนโรงพยาบาล
   patient_ward            String? // หมายเลขตึก
-  patient_date_service    String? // วันที่ให้บริการ
-  patient_date_admitted   String? // วันที่เข้ารับรักษา
-  patient_date_discharged String? // วันที่ออกจากโรงพยาบาล
+  patient_date_service    DateTime?   @db.Date // วันที่ให้บริการ
+  patient_date_admitted   DateTime?   @db.Date // วันที่เข้ารับรักษา
+  patient_date_discharged DateTime?   @db.Date // วันที่ออกจากโรงพยาบาล
   created_at              DateTime    @default(now()) // วัน-เวลาที่บันทึก
   created_by              String?     @default("admin") // ชื่อผู้บันทึก
   updated_at              DateTime    @updatedAt // วัน-เวลาที่อัพเดท
