@@ -92,6 +92,8 @@ exports.VerifyOtp = async (req, res) => {
             await am.InsertLog(sl)
 
             return msg(res, 200, { message: "Login successfully!" })
+        } else {
+            return msg(res, 400, { message: "OTP ไม่ถูกต้อง" });
         }
     } catch (err) {
         if (err.name === 'TokenExpiredError') {

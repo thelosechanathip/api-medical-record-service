@@ -148,19 +148,19 @@ CREATE TABLE `review_status_logs` (
 CREATE TABLE `content_of_medical_records` (
     `content_of_medical_record_id` VARCHAR(191) NOT NULL,
     `content_of_medical_record_name` VARCHAR(100) NOT NULL,
-    `na_type` BOOLEAN NOT NULL DEFAULT false,
-    `missing_type` BOOLEAN NOT NULL DEFAULT false,
-    `no_type` BOOLEAN NOT NULL DEFAULT false,
-    `criterion_number_1_type` BOOLEAN NOT NULL DEFAULT false,
-    `criterion_number_2_type` BOOLEAN NOT NULL DEFAULT false,
-    `criterion_number_3_type` BOOLEAN NOT NULL DEFAULT false,
-    `criterion_number_4_type` BOOLEAN NOT NULL DEFAULT false,
-    `criterion_number_5_type` BOOLEAN NOT NULL DEFAULT false,
-    `criterion_number_6_type` BOOLEAN NOT NULL DEFAULT false,
-    `criterion_number_7_type` BOOLEAN NOT NULL DEFAULT false,
-    `criterion_number_8_type` BOOLEAN NOT NULL DEFAULT false,
-    `criterion_number_9_type` BOOLEAN NOT NULL DEFAULT false,
-    `points_deducted_type` BOOLEAN NOT NULL DEFAULT false,
+    `na_type` BOOLEAN NULL DEFAULT false,
+    `missing_type` BOOLEAN NULL DEFAULT false,
+    `no_type` BOOLEAN NULL DEFAULT false,
+    `criterion_number_1_type` BOOLEAN NULL DEFAULT false,
+    `criterion_number_2_type` BOOLEAN NULL DEFAULT false,
+    `criterion_number_3_type` BOOLEAN NULL DEFAULT false,
+    `criterion_number_4_type` BOOLEAN NULL DEFAULT false,
+    `criterion_number_5_type` BOOLEAN NULL DEFAULT false,
+    `criterion_number_6_type` BOOLEAN NULL DEFAULT false,
+    `criterion_number_7_type` BOOLEAN NULL DEFAULT false,
+    `criterion_number_8_type` BOOLEAN NULL DEFAULT false,
+    `criterion_number_9_type` BOOLEAN NULL DEFAULT false,
+    `points_deducted_type` BOOLEAN NULL DEFAULT false,
     `patient_service_id` VARCHAR(191) NULL,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `created_by` VARCHAR(191) NULL DEFAULT 'admin',
@@ -188,6 +188,36 @@ CREATE TABLE `content_of_medical_record_logs` (
     PRIMARY KEY (`content_of_medical_record_log_id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
+-- CreateTable
+CREATE TABLE `overall_finding` (
+    `overall_finding_id` VARCHAR(191) NOT NULL,
+    `overall_finding_name` LONGTEXT NOT NULL,
+    `patient_service_id` VARCHAR(191) NULL,
+    `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `created_by` VARCHAR(191) NULL DEFAULT 'admin',
+    `updated_at` DATETIME(3) NOT NULL,
+    `updated_by` VARCHAR(191) NULL DEFAULT 'admin',
+
+    PRIMARY KEY (`overall_finding_id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `overall_finding_logs` (
+    `overall_finding_log_id` VARCHAR(191) NOT NULL,
+    `ip_address` VARCHAR(191) NOT NULL,
+    `name` VARCHAR(191) NOT NULL,
+    `request_method` VARCHAR(191) NOT NULL,
+    `endpoint` VARCHAR(191) NOT NULL,
+    `execution_time` INTEGER NOT NULL,
+    `row_count` INTEGER NULL,
+    `status` VARCHAR(191) NOT NULL,
+    `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+
+    INDEX `overall_finding_logs_created_at_idx`(`created_at`),
+    INDEX `overall_finding_logs_endpoint_idx`(`endpoint`),
+    PRIMARY KEY (`overall_finding_log_id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
 -- AddForeignKey
 ALTER TABLE `patients` ADD CONSTRAINT `patients_hcode_id_fkey` FOREIGN KEY (`hcode_id`) REFERENCES `hcodes`(`hcode_id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
@@ -196,3 +226,6 @@ ALTER TABLE `review_status` ADD CONSTRAINT `review_status_patient_service_id_fke
 
 -- AddForeignKey
 ALTER TABLE `content_of_medical_records` ADD CONSTRAINT `content_of_medical_records_patient_service_id_fkey` FOREIGN KEY (`patient_service_id`) REFERENCES `patient_services`(`patient_service_id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `overall_finding` ADD CONSTRAINT `overall_finding_patient_service_id_fkey` FOREIGN KEY (`patient_service_id`) REFERENCES `patient_services`(`patient_service_id`) ON DELETE SET NULL ON UPDATE CASCADE;
