@@ -28,13 +28,13 @@ exports.AuthLogin = async (req, res) => {
 
         // Check username and password
         const fur = await am.FetchUser(data.username)
-        if (fur.length === 0) return msg(res, 404, { message: "User not found!" })
+        if (!fur) return msg(res, 404, { message: "User not found!" })
         const cp = await ComparePassword(data.password, fur.password)
         if (!cp) return msg(res, 400, { message: "Password incorrect!" })
 
         // Check Telegram
         const ftr = await am.FetchTelegramByPersonId(fur.person_id)
-        if (ftr.length === 0) return msg(res, 404, { message: "Telegram not found!" })
+        if (!ftr) return msg(res, 404, { message: "Telegram not found!" })
 
         // Generate Token and Fetch Bot Token
         const token = await Sign(fur.id, ftr.chat_id)
