@@ -17,10 +17,10 @@ async function main() {
     // 💥table patient_services
     await pm.patient_services.createMany({
         data: [
-            { patient_service_name_english: 'OPD', patient_service_name_thai: 'ผู้ป่วยนอก' },
-            { patient_service_name_english: 'IPD', patient_service_name_thai: 'ผู้ป่วยใน' },
-            { patient_service_name_english: 'ER', patient_service_name_thai: 'ผู้ป่วยฉุกเฉิน' },
-            { patient_service_name_english: 'LR', patient_service_name_thai: 'ห้องคลอด' },
+            { patient_service_name_english: 'OPD', patient_service_name_thai: 'ผู้ป่วยนอก', priority: 1 },
+            { patient_service_name_english: 'IPD', patient_service_name_thai: 'ผู้ป่วยใน', priority: 2 },
+            { patient_service_name_english: 'ER', patient_service_name_thai: 'ผู้ป่วยฉุกเฉิน', priority: 3 },
+            { patient_service_name_english: 'LR', patient_service_name_thai: 'ห้องคลอด', priority: 4 },
         ],
         skipDuplicates: true, // rerun ได้ไม่ล้ม
     })
@@ -260,18 +260,21 @@ async function main() {
                 review_status_description: "ข้อมูลไม่เพียงพอสำหรับการทบทวน",
                 review_status_type: false,
                 patient_service_id: fpsIpd.patient_service_id,
+                priority: 1,
             },
             {
                 review_status_name: "No Significant medical record issue identified",
                 review_status_description: "ไม่มีปัญหาสำคัญจากการทบทวน",
                 review_status_type: false,
                 patient_service_id: fpsIpd.patient_service_id,
+                priority: 2,
             },
             {
                 review_status_name: "Certain issues in question specify",
                 review_status_description: "มีปัญหาจากการทบทวนที่ต้องค้นต่อ",
                 review_status_type: true,
                 patient_service_id: fpsIpd.patient_service_id,
+                priority: 3,
             },
         ],
         skipDuplicates: true, // rerun ได้ไม่ล้ม
@@ -283,11 +286,13 @@ async function main() {
         data: [
             {
                 overall_finding_name: "การจัดเรียงเวชระเบียนไม่เป็นไปตามมาตรฐานที่กำหนด",
-                patient_service_id: fpsIpd.patient_service_id
+                patient_service_id: fpsIpd.patient_service_id,
+                priority: 1,
             },
             {
                 overall_finding_name: "เอกสารบางแผ่นไม่มีชื่อผู้รับบริการ HN AN ทำให้ไม่สามารุระบุได้ว่า เอกสารแผ่นนี้เป็นของใครจึงไม่สามารถทบทวนเอกสารแผ่นนั้นได้",
-                patient_service_id: fpsIpd.patient_service_id
+                patient_service_id: fpsIpd.patient_service_id,
+                priority: 2,
             },
         ],
         skipDuplicates: true, // rerun ได้ไม่ล้ม

@@ -4,14 +4,17 @@ exports.InsertLog = async (data) => await pm.overall_finding_logs.create({ data:
 
 exports.FetchAllOverallFinding = async () => await pm.overall_finding.findMany()
 
-// exports.CheckUnique = async (key, value) => await pm.content_of_medical_records.findFirst({ where: { [key]: value } })
+exports.CheckUnique = async (data) => await pm.overall_finding.findFirst({ where: data })
 
-exports.CheckPatientServiceId = async (key, value) => await pm.patient_services.findFirst({ where: { [key]: value } })
+exports.CheckPatientServiceId = async (data) => await pm.patient_services.findFirst({ where: data })
+
+exports.CheckPriority = async (data) =>
+    await pm.overall_finding.findFirst({ where: data, orderBy: { priority: 'desc' } })
 
 exports.InsertOverallFinding = async (data) => await pm.overall_finding.create({ data: data })
 
-exports.FetchOneOverallFindingById = async (id) => await pm.overall_finding.findFirst({ where: { overall_finding_id: id } })
+exports.FetchOneOverallFindingById = async (id) => await pm.overall_finding.findFirst({ where: id })
 
-exports.UpdateOverallFinding = async (id, data) => await pm.overall_finding.update({ where: { overall_finding_id: id }, data: data })
+exports.UpdateOverallFinding = async (id, data) => await pm.overall_finding.update({ where: id, data: data })
 
-exports.RemoveOverallFinding = async (id) => await pm.overall_finding.delete({ where: { overall_finding_id: id } })
+exports.RemoveOverallFinding = async (id) => await pm.overall_finding.delete({ where: id })

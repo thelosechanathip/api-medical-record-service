@@ -26,41 +26,23 @@ exports.InsertOverallFinding = async (req, res) => {
     try {
         const ofd = req.body
 
-        // ตรวจสอบค่าซ้ำ โดยเก็บค่า duplicate message ไว้ก่อน
-        const duplicateStatus = []
-        const duplicateMessage = []
-        let hasEmptyValue = false // Flag สำหรับตรวจสอบค่าที่ว่าง
+        if (!ofd.overall_finding_name) return msg(res, 400, { message: 'กรุณากรอกชื่อการค้นพบ!' })
+        if (!ofd.patient_service_id) return msg(res, 400, { message: 'กรุณากรอกกลุ่มคนไข้!' })
 
-        await Promise.all(
-            Object.entries(ofd).map(async ([key, value]) => {
-                // ถ้าพบค่าว่าง ให้ตั้งค่า flag เป็น true
-                if (!value && key == 'overall_finding_name') hasEmptyValue = true
-                // if (value && key == 'content_of_medical_record_name') {
-                //     const cu = await ofm.CheckUnique(key, value) // cu = CheckUnique
-                //     if (cu) {
-                //         duplicateStatus.push(409)
-                //         duplicateMessage.push(`( ${value} ) มีข้อมูลในระบบแล้ว ไม่อนุญาตให้บันทึกข้อมูลซ้ำ!`)
-                //     }
-                // }
+        const cpsi = await ofm.CheckPatientServiceId({ patient_service_id: ofd.patient_service_id })
+        if (!cpsi) return msg(res, 404, { message: 'ไม่มีข้อมูลคำระบุของกลุ่มคนไข้ที่เลือกมากรุณาตรวจสอบ!' })
 
-                if (value && key == 'patient_service_id') {
-                    const cptsi = await ofm.CheckPatientServiceId(key, value) // cptsi = check patient service id
-                    if (!cptsi) {
-                        duplicateStatus.push(404)
-                        duplicateMessage.push(`ไม่มีข้อมูลคำระบุของกลุ่มคนไข้ที่เลือกมากรุณาตรวจสอบ!`)
-                    }
-                }
-            })
-        )
+        const cu = await ofm.CheckUnique({
+            overall_finding_name: ofd.overall_finding_name,
+            patient_service_id: ofd.patient_service_id
+        })
+        if (cu) return msg(res, 409, {
+            message: `มีข้อมูล ${ofd.overall_finding_name} ในกลุ่มคนไข้ ${cpsi.patient_service_name_english} อยู่แล้วไม่อนุญาตให้บันทึกข้อมูลซ้ำในกลุ่มคนไข้เดียวกัน!`
+        })
 
-        // ถ้ามีค่าที่ว่าง ให้เพิ่มข้อความแค่ครั้งเดียว
-        if (hasEmptyValue) {
-            duplicateMessage.unshift("กรุณากรอกข้อมูลให้ครบถ้วน!")
-            return msg(res, 400, { message: duplicateMessage[0] })
-        }
-
-        // ถ้ามีข้อมูลซ้ำหรือค่าที่ว่าง ให้ส่ง response กลับครั้งเดียว
-        if (duplicateMessage.length > 0) return msg(res, Math.max(...duplicateStatus), { message: duplicateMessage.join(" AND ") })
+        const cPriority = await ofm.CheckPriority({ patient_service_id: ofd.patient_service_id })
+        if (cPriority) ofd.priority = cPriority.priority + 1
+        else ofd.priority = 1
 
         ofd.created_by = req.fullname
         ofd.updated_by = req.fullname
@@ -86,7 +68,7 @@ exports.FetchOneOverallFindingById = async (req, res) => {
         const ofId = req.params.ofId
 
         const startTime = Date.now()
-        const foof = await ofm.FetchOneOverallFindingById(ofId) // foof = fetch one overall finding by id
+        const foof = await ofm.FetchOneOverallFindingById({ overall_finding_id: ofId }) // foof = fetch one overall finding by id
         if (!foof) return msg(res, 404, { message: 'Data not found!' })
         const endTime = Date.now() - startTime
 
@@ -105,52 +87,33 @@ exports.FetchOneOverallFindingById = async (req, res) => {
 exports.UpdateOverallFinding = async (req, res) => {
     try {
         const ofId = req.params.ofId
-        const foof = await ofm.FetchOneOverallFindingById(ofId) // foof = fetch one overall finding by id
+        const foof = await ofm.FetchOneOverallFindingById({ overall_finding_id: ofId }) // foof = fetch one overall finding by id
         if (!foof) return msg(res, 404, { message: 'Data not found!' })
 
         const ofd = req.body
 
-        // ตรวจสอบค่าซ้ำ โดยเก็บค่า duplicate message ไว้ก่อน
-        const duplicateStatus = []
-        const duplicateMessage = []
-        let hasEmptyValue = false // Flag สำหรับตรวจสอบค่าที่ว่าง
+        if (!ofd.overall_finding_name) return msg(res, 400, { message: 'กรุณากรอกชื่อการค้นพบ!' })
+        if (!ofd.patient_service_id) return msg(res, 400, { message: 'กรุณากรอกกลุ่มคนไข้!' })
 
-        await Promise.all(
-            Object.entries(ofd).map(async ([key, value]) => {
-                // ถ้าพบค่าว่าง ให้ตั้งค่า flag เป็น true
-                if (!value && key == 'overall_finding_name') hasEmptyValue = true
-                // if (value && key == 'content_of_medical_record_name') {
-                //     const cu = await ofm.CheckUnique(key, value) // cu = CheckUnique
-                //     if (cu) {
-                //         duplicateStatus.push(409)
-                //         duplicateMessage.push(`( ${value} ) มีข้อมูลในระบบแล้ว ไม่อนุญาตให้บันทึกข้อมูลซ้ำ!`)
-                //     }
-                // }
+        const cpsi = await ofm.CheckPatientServiceId({ patient_service_id: ofd.patient_service_id })
+        if (!cpsi) return msg(res, 404, { message: 'ไม่มีข้อมูลคำระบุของกลุ่มคนไข้ที่เลือกมากรุณาตรวจสอบ!' })
 
-                if (value && key == 'patient_service_id') {
-                    const cptsi = await ofm.CheckPatientServiceId(key, value) // cptsi = check patient service id
-                    if (!cptsi) {
-                        duplicateStatus.push(404)
-                        duplicateMessage.push(`ไม่มีข้อมูลคำระบุของกลุ่มคนไข้ที่เลือกมากรุณาตรวจสอบ!`)
-                    }
-                }
-            })
-        )
+        const cu = await ofm.CheckUnique({
+            overall_finding_name: ofd.overall_finding_name,
+            patient_service_id: ofd.patient_service_id
+        })
+        if (cu) return msg(res, 409, {
+            message: `มีข้อมูล ${ofd.overall_finding_name} ในกลุ่มคนไข้ ${cpsi.patient_service_name_english} อยู่แล้วไม่อนุญาตให้บันทึกข้อมูลซ้ำในกลุ่มคนไข้เดียวกัน!`
+        })
 
-        // ถ้ามีค่าที่ว่าง ให้เพิ่มข้อความแค่ครั้งเดียว
-        if (hasEmptyValue) {
-            duplicateMessage.unshift("กรุณากรอกข้อมูลให้ครบถ้วน!")
-            return msg(res, 400, { message: duplicateMessage[0] })
-        }
+        const cPriority = await ofm.CheckPriority({ patient_service_id: ofd.patient_service_id })
+        if (cPriority) ofd.priority = cPriority.priority + 1
+        else ofd.priority = 1
 
-        // ถ้ามีข้อมูลซ้ำหรือค่าที่ว่าง ให้ส่ง response กลับครั้งเดียว
-        if (duplicateMessage.length > 0) return msg(res, Math.max(...duplicateStatus), { message: duplicateMessage.join(" AND ") })
-
-        ofd.created_by = req.fullname
         ofd.updated_by = req.fullname
 
         const startTime = Date.now()
-        const uof = await ofm.UpdateOverallFinding(ofId, ofd)
+        const uof = await ofm.UpdateOverallFinding({ overall_finding_id: ofId }, ofd)
         const endTime = Date.now() - startTime
 
         // Set and Insert Log
@@ -168,11 +131,11 @@ exports.UpdateOverallFinding = async (req, res) => {
 exports.RemoveOverallFinding = async (req, res) => {
     try {
         const ofId = req.params.ofId
-        const foof = await ofm.FetchOneOverallFindingById(ofId) // foof = fetch one overall finding by id
+        const foof = await ofm.FetchOneOverallFindingById({ overall_finding_id: ofId }) // foof = fetch one overall finding by id
         if (!foof) return msg(res, 404, { message: 'Data not found!' })
 
         const startTime = Date.now()
-        const rof = await ofm.RemoveOverallFinding(ofId)
+        const rof = await ofm.RemoveOverallFinding({ overall_finding_id: ofId })
         const endTime = Date.now() - startTime
 
         // Set and Insert Log

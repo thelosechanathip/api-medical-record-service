@@ -84,6 +84,7 @@ model patient_services {
   patient_service_id           String                       @id @default(uuid())
   patient_service_name_english String                       @unique // ชื่อคำระบุของกลุ่มคนไข้อังกฤษ
   patient_service_name_thai    String                       @unique // ชื่อคำระบุของกลุ่มคนไข้ไทย
+  priority                     Int // ลำดับความสำคัญ
   created_at                   DateTime                     @default(now()) // วัน-เวลาที่บันทึก
   created_by                   String?                      @default("admin") // ชื่อผู้บันทึก
   updated_at                   DateTime                     @updatedAt // วัน-เวลาที่อัพเดท
@@ -112,9 +113,10 @@ model patient_service_logs {
 // ตารางเก็บข้อมูลสถานะการตรวจสอบ
 model review_status {
   review_status_id               String                           @id @default(uuid())
-  review_status_name             String                           @unique // ชื่อสถานะการตรวจสอบ
+  review_status_name             String                           @db.LongText // ชื่อสถานะการตรวจสอบ
   review_status_description      String // คำอธิบายสถานะการตรวจสอบ
   review_status_type             Boolean? // Type ที่เอาไว้บอกว่าจำเป็นหรือไม่จำเป็นที่จะต้องอธิบายเพิ่มเติม ( 0 = ไม่จำเป็น, 1 = จำเป็น )
+  priority                       Int // ลำดับความสำคัญ
   patient_service_id             String? // Foreign Key ของตาราง patient_services( ข้อมูลคำระบุของกลุ่มคนไข้ )
   patient_service                patient_services?                @relation(fields: [patient_service_id], references: [patient_service_id], onDelete: Restrict)
   created_at                     DateTime                         @default(now()) // วัน-เวลาที่บันทึก
@@ -143,7 +145,7 @@ model review_status_logs {
 // ตารางเก็บข้อมูลเนื้อหาของเวชระเบียน( true: จำเป็น, false: ไม่จำเป็น )
 model content_of_medical_records {
   content_of_medical_record_id               String                                       @id @default(uuid())
-  content_of_medical_record_name             String                                       @unique @db.VarChar(100) // ชื่อเนื้อหาของเวชระเบียน
+  content_of_medical_record_name             String                                       @db.LongText // ชื่อเนื้อหาของเวชระเบียน
   na_type                                    Boolean?                                     @default(false) // ประเภทของ NA
   missing_type                               Boolean?                                     @default(false) // ประเภทของ Missing
   no_type                                    Boolean?                                     @default(false) // ประเภทของ No
@@ -187,6 +189,7 @@ model content_of_medical_record_logs {
 model overall_finding {
   overall_finding_id               String                             @id @default(uuid())
   overall_finding_name             String                             @db.LongText // ชื่อการค้นพบโดยรวม
+  priority                         Int // ลำดับความสำคัญ
   patient_services                 patient_services                   @relation(fields: [patient_service_id], references: [patient_service_id], onDelete: Restrict)
   patient_service_id               String // Foreign Key ของตาราง patient_services( ข้อมูลคำระบุของกลุ่มคนไข้ )
   created_at                       DateTime                           @default(now()) // วัน-เวลาที่บันทึก
@@ -292,6 +295,7 @@ model form_ipd_overall_finding_results {
   form_ipd_id                        String // Foreign Key ของตาราง form_ipds( ตารางเก็บข้อมูล Form IPD )
   overall_finding                    overall_finding @relation(fields: [overall_finding_id], references: [overall_finding_id], onDelete: Restrict)
   overall_finding_id                 String // Foreign Key ของตาราง overall_finding( ตารางเก็บข้อมูลการค้นพบโดยรวม )
+  overall_finding_result             Boolean? // เก็บค่าของ OverallFinding
   created_at                         DateTime        @default(now()) // วัน-เวลาที่บันทึก
   created_by                         String?         @default("admin") // ชื่อผู้บันทึก
   updated_at                         DateTime        @updatedAt // วัน-เวลาที่อัพเดท

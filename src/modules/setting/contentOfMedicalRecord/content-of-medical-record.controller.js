@@ -26,43 +26,21 @@ exports.InsertContentOfMedicalRecord = async (req, res) => {
     try {
         const comrd = req.body
 
-        // ตรวจสอบค่าซ้ำ โดยเก็บค่า duplicate message ไว้ก่อน
-        const duplicateStatus = []
-        const duplicateMessage = []
-        let hasEmptyValue = false // Flag สำหรับตรวจสอบค่าที่ว่าง
+        if (!comrd.content_of_medical_record_name) return msg(res, 400, { message: 'กรุณากรอกชื่อประเภทข้อมูล!' })
+        if (!comrd.patient_service_id) return msg(res, 400, { message: 'กรุณากรอกกลุ่มคนไข้!' })
 
-        await Promise.all(
-            Object.entries(comrd).map(async ([key, value]) => {
-                // ถ้าพบค่าว่าง ให้ตั้งค่า flag เป็น true
-                if (!value && key == 'content_of_medical_record_name') hasEmptyValue = true
-                if (value && key == 'content_of_medical_record_name') {
-                    const cu = await comrm.CheckUnique(key, value) // cu = CheckUnique
-                    if (cu) {
-                        duplicateStatus.push(409)
-                        duplicateMessage.push(`( ${value} ) มีข้อมูลในระบบแล้ว ไม่อนุญาตให้บันทึกข้อมูลซ้ำ!`)
-                    }
-                }
+        const cpsi = await comrm.CheckPatientServiceId({ patient_service_id: comrd.patient_service_id })
+        if (!cpsi) return msg(res, 404, { message: 'ไม่มีข้อมูลคำระบุของกลุ่มคนไข้ที่เลือกมากรุณาตรวจสอบ!' })
 
-                if (value && key == 'patient_service_id') {
-                    const cptsi = await comrm.CheckPatientServiceId(key, value) // cptsi = check patient service id
-                    if (!cptsi) {
-                        duplicateStatus.push(404)
-                        duplicateMessage.push(`ไม่มีข้อมูลคำระบุของกลุ่มคนไข้ที่เลือกมากรุณาตรวจสอบ!`)
-                    }
-                }
-            })
-        )
+        const cu = await comrm.CheckUnique({
+            content_of_medical_record_name: comrd.content_of_medical_record_name,
+            patient_service_id: comrd.patient_service_id
+        })
+        if (cu) return msg(res, 409, {
+            message: `มีข้อมูล ${comrd.content_of_medical_record_name} ในกลุ่มคนไข้ ${cpsi.patient_service_name_english} อยู่แล้วไม่อนุญาตให้บันทึกข้อมูลซ้ำในกลุ่มคนไข้เดียวกัน!`
+        })
 
-        // ถ้ามีค่าที่ว่าง ให้เพิ่มข้อความแค่ครั้งเดียว
-        if (hasEmptyValue) {
-            duplicateMessage.unshift("กรุณากรอกข้อมูลให้ครบถ้วน!")
-            return msg(res, 400, { message: duplicateMessage[0] })
-        }
-
-        // ถ้ามีข้อมูลซ้ำหรือค่าที่ว่าง ให้ส่ง response กลับครั้งเดียว
-        if (duplicateMessage.length > 0) return msg(res, Math.max(...duplicateStatus), { message: duplicateMessage.join(" AND ") })
-
-        const cPriority = await comrm.CheckPriority(comrd.patient_service_id)
+        const cPriority = await comrm.CheckPriority({ patient_service_id: comrd.patient_service_id })
         if (cPriority) comrd.priority = cPriority.priority + 1
         else comrd.priority = 1
 
@@ -90,7 +68,7 @@ exports.FetchOneContentOfMedicalRecordById = async (req, res) => {
         const comrId = req.params.comrId // comrId = content of medical record id
 
         const startTime = Date.now()
-        const focomr = await comrm.FetchOneContentOfMedicalRecordById(comrId) // focomr = fetch one content of medical record by id
+        const focomr = await comrm.FetchOneContentOfMedicalRecordById({ content_of_medical_record_id: comrId }) // focomr = fetch one content of medical record by id
         if (!focomr) return msg(res, 404, { message: 'Data not found!' })
         const endTime = Date.now() - startTime
 
@@ -109,51 +87,33 @@ exports.FetchOneContentOfMedicalRecordById = async (req, res) => {
 exports.UpdateContentOfMedicalRecord = async (req, res) => {
     try {
         const comrId = req.params.comrId // comrId = content of medical record id
-        const focomr = await comrm.FetchOneContentOfMedicalRecordById(comrId) // focomr = fetch one content of medical record by id
+        const focomr = await comrm.FetchOneContentOfMedicalRecordById({ content_of_medical_record_id: comrId }) // focomr = fetch one content of medical record by id
         if (!focomr) return msg(res, 404, { message: 'Data not found!' })
 
         const comrd = req.body
 
-        // ตรวจสอบค่าซ้ำ โดยเก็บค่า duplicate message ไว้ก่อน
-        const duplicateStatus = []
-        const duplicateMessage = []
-        let hasEmptyValue = false // Flag สำหรับตรวจสอบค่าที่ว่าง
+        if (!comrd.content_of_medical_record_name) return msg(res, 400, { message: 'กรุณากรอกชื่อประเภทข้อมูล' })
+        if (!comrd.patient_service_id) return msg(res, 400, { message: 'กรุณากรอกกลุ่มคนไข้' })
 
-        await Promise.all(
-            Object.entries(comrd).map(async ([key, value]) => {
-                // ถ้าพบค่าว่าง ให้ตั้งค่า flag เป็น true
-                if (!value && key == 'content_of_medical_record_name') hasEmptyValue = true
-                if (value && key == 'content_of_medical_record_name') {
-                    const cu = await comrm.CheckUnique(key, value) // cu = CheckUnique
-                    if (cu) {
-                        duplicateStatus.push(409)
-                        duplicateMessage.push(`( ${value} ) มีข้อมูลในระบบแล้ว ไม่อนุญาตให้บันทึกข้อมูลซ้ำ!`)
-                    }
-                }
+        const cpsi = await comrm.CheckPatientServiceId({ patient_service_id: comrd.patient_service_id })
+        if (!cpsi) return msg(res, 404, { message: 'ไม่มีข้อมูลคำระบุของกลุ่มคนไข้ที่เลือกมากรุณาตรวจสอบ!' })
 
-                if (value && key == 'patient_service_id') {
-                    const cptsi = await comrm.CheckPatientServiceId(key, value) // cptsi = check patient service id
-                    if (!cptsi) {
-                        duplicateStatus.push(404)
-                        duplicateMessage.push(`ไม่มีข้อมูลคำระบุของกลุ่มคนไข้ที่เลือกมากรุณาตรวจสอบ!`)
-                    }
-                }
-            })
-        )
+        const cu = await comrm.CheckUnique({
+            content_of_medical_record_name: comrd.content_of_medical_record_name,
+            patient_service_id: comrd.patient_service_id
+        })
+        if (cu) return msg(res, 409, {
+            message: `มีข้อมูล ${comrd.content_of_medical_record_name} ในกลุ่มคนไข้ ${cpsi.patient_service_name_english} อยู่แล้วไม่อนุญาตให้บันทึกข้อมูลซ้ำในกลุ่มคนไข้เดียวกัน!`
+        })
 
-        // ถ้ามีค่าที่ว่าง ให้เพิ่มข้อความแค่ครั้งเดียว
-        if (hasEmptyValue) {
-            duplicateMessage.unshift("กรุณากรอกข้อมูลให้ครบถ้วน!")
-            return msg(res, 400, { message: duplicateMessage[0] })
-        }
-
-        // ถ้ามีข้อมูลซ้ำหรือค่าที่ว่าง ให้ส่ง response กลับครั้งเดียว
-        if (duplicateMessage.length > 0) return msg(res, Math.max(...duplicateStatus), { message: duplicateMessage.join(" AND ") })
+        const cPriority = await comrm.CheckPriority({ patient_service_id: comrd.patient_service_id })
+        if (cPriority) comrd.priority = cPriority.priority + 1
+        else comrd.priority = 1
 
         comrd.updated_by = req.fullname
 
         const startTime = Date.now()
-        const ucomr = await comrm.UpdateContentOfMedicalRecord(comrId, comrd) // ucomr = update content of medical record
+        const ucomr = await comrm.UpdateContentOfMedicalRecord({ content_of_medical_record_id: comrId }, comrd) // ucomr = update content of medical record
         const endTime = Date.now() - startTime
 
         // Set and Insert Log
@@ -171,11 +131,11 @@ exports.UpdateContentOfMedicalRecord = async (req, res) => {
 exports.RemoveContentOfMedicalRecord = async (req, res) => {
     try {
         const comrId = req.params.comrId // comrId = content of medical record id
-        const focomr = await comrm.FetchOneContentOfMedicalRecordById(comrId) // focomr = fetch one content of medical record by id
+        const focomr = await comrm.FetchOneContentOfMedicalRecordById({ content_of_medical_record_id: comrId }) // focomr = fetch one content of medical record by id
         if (!focomr) return msg(res, 404, { message: 'Data not found!' })
 
         const startTime = Date.now()
-        const rcomr = await comrm.RemoveContentOfMedicalRecord(comrId) // rcomr = remove content of medical record
+        const rcomr = await comrm.RemoveContentOfMedicalRecord({ content_of_medical_record_id: comrId }) // rcomr = remove content of medical record
         const endTime = Date.now() - startTime
 
         // Set and Insert Log

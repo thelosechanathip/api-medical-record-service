@@ -84,6 +84,7 @@ CREATE TABLE `patient_services` (
     `patient_service_id` VARCHAR(191) NOT NULL,
     `patient_service_name_english` VARCHAR(191) NOT NULL,
     `patient_service_name_thai` VARCHAR(191) NOT NULL,
+    `priority` INTEGER NOT NULL,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `created_by` VARCHAR(191) NULL DEFAULT 'admin',
     `updated_at` DATETIME(3) NOT NULL,
@@ -114,16 +115,16 @@ CREATE TABLE `patient_service_logs` (
 -- CreateTable
 CREATE TABLE `review_status` (
     `review_status_id` VARCHAR(191) NOT NULL,
-    `review_status_name` VARCHAR(191) NOT NULL,
+    `review_status_name` LONGTEXT NOT NULL,
     `review_status_description` VARCHAR(191) NOT NULL,
     `review_status_type` BOOLEAN NULL,
+    `priority` INTEGER NOT NULL,
     `patient_service_id` VARCHAR(191) NULL,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `created_by` VARCHAR(191) NULL DEFAULT 'admin',
     `updated_at` DATETIME(3) NOT NULL,
     `updated_by` VARCHAR(191) NULL DEFAULT 'admin',
 
-    UNIQUE INDEX `review_status_review_status_name_key`(`review_status_name`),
     PRIMARY KEY (`review_status_id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -147,7 +148,7 @@ CREATE TABLE `review_status_logs` (
 -- CreateTable
 CREATE TABLE `content_of_medical_records` (
     `content_of_medical_record_id` VARCHAR(191) NOT NULL,
-    `content_of_medical_record_name` VARCHAR(100) NOT NULL,
+    `content_of_medical_record_name` LONGTEXT NOT NULL,
     `na_type` BOOLEAN NULL DEFAULT false,
     `missing_type` BOOLEAN NULL DEFAULT false,
     `no_type` BOOLEAN NULL DEFAULT false,
@@ -168,7 +169,6 @@ CREATE TABLE `content_of_medical_records` (
     `updated_at` DATETIME(3) NOT NULL,
     `updated_by` VARCHAR(191) NULL DEFAULT 'admin',
 
-    UNIQUE INDEX `content_of_medical_records_content_of_medical_record_name_key`(`content_of_medical_record_name`),
     PRIMARY KEY (`content_of_medical_record_id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -193,6 +193,7 @@ CREATE TABLE `content_of_medical_record_logs` (
 CREATE TABLE `overall_finding` (
     `overall_finding_id` VARCHAR(191) NOT NULL,
     `overall_finding_name` LONGTEXT NOT NULL,
+    `priority` INTEGER NOT NULL,
     `patient_service_id` VARCHAR(191) NOT NULL,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `created_by` VARCHAR(191) NULL DEFAULT 'admin',
@@ -296,6 +297,7 @@ CREATE TABLE `form_ipd_overall_finding_results` (
     `form_ipd_overall_finding_result_id` VARCHAR(191) NOT NULL,
     `form_ipd_id` VARCHAR(191) NOT NULL,
     `overall_finding_id` VARCHAR(191) NOT NULL,
+    `overall_finding_result` BOOLEAN NULL,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `created_by` VARCHAR(191) NULL DEFAULT 'admin',
     `updated_at` DATETIME(3) NOT NULL,

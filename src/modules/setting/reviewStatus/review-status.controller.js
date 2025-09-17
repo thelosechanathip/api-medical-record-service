@@ -26,43 +26,23 @@ exports.InsertReviewStatus = async (req, res) => {
     try {
         const rstd = req.body
 
-        // ตรวจสอบค่าซ้ำ โดยเก็บค่า duplicate message ไว้ก่อน
-        const duplicateStatus = []
-        const duplicateMessage = []
-        let hasEmptyValue = false // Flag สำหรับตรวจสอบค่าที่ว่าง
+        if (!rstd.review_status_name) return msg(res, 400, { message: 'กรุณากรอกสถานะการตรวจสอบ!' })
+        if (!rstd.patient_service_id) return msg(res, 400, { message: 'กรุณากรอกกลุ่มคนไข้!' })
 
-        await Promise.all(
-            Object.entries(rstd).map(async ([key, value]) => {
-                // ถ้าพบค่าว่าง ให้ตั้งค่า flag เป็น true
-                if (!value && key !== 'review_status_type') hasEmptyValue = true
+        const cpsi = await rstm.CheckPatientServiceId({ patient_service_id: rstd.patient_service_id })
+        if (!cpsi) return msg(res, 404, { message: 'ไม่มีข้อมูลคำระบุของกลุ่มคนไข้ที่เลือกมากรุณาตรวจสอบ!' })
 
-                // ตรวจสอบค่าซ้ำเฉพาะ field ที่ไม่ว่าง
-                if (value && key === 'review_status_name') {
-                    const cu = await rstm.CheckUnique(key, value) // cu = CheckUnique
-                    if (cu) {
-                        duplicateStatus.push(409)
-                        duplicateMessage.push(`( ${value} ) มีข้อมูลในระบบแล้ว ไม่อนุญาตให้บันทึกข้อมูลซ้ำ!`)
-                    }
-                }
+        const cu = await rstm.CheckUnique({
+            review_status_name: rstd.review_status_name,
+            patient_service_id: rstd.patient_service_id
+        })
+        if (cu) return msg(res, 409, {
+            message: `มีข้อมูล ${rstd.review_status_name} ในกลุ่มคนไข้ ${cpsi.patient_service_name_english} อยู่แล้วไม่อนุญาตให้บันทึกข้อมูลซ้ำในกลุ่มคนไข้เดียวกัน!`
+        })
 
-                if (value && key === 'patient_service_id') {
-                    const cptsi = await rstm.CheckPatientServiceId(value) // cptsi = check patient service id
-                    if (!cptsi) {
-                        duplicateStatus.push(404)
-                        duplicateMessage.push(`ไม่มีข้อมูลคำระบุของกลุ่มคนไข้ที่เลือกมากรุณาตรวจสอบ!`)
-                    }
-                }
-            })
-        )
-
-        // ถ้ามีค่าที่ว่าง ให้เพิ่มข้อความแค่ครั้งเดียว
-        if (hasEmptyValue) {
-            duplicateMessage.unshift("กรุณากรอกข้อมูลให้ครบถ้วน!")
-            return msg(res, 400, { message: duplicateMessage[0] })
-        }
-
-        // ถ้ามีข้อมูลซ้ำหรือค่าที่ว่าง ให้ส่ง response กลับครั้งเดียว
-        if (duplicateMessage.length > 0) return msg(res, Math.max(...duplicateStatus), { message: duplicateMessage.join(" AND ") })
+        const cPriority = await rstm.CheckPriority({ patient_service_id: rstd.patient_service_id })
+        if (cPriority) rstd.priority = cPriority.priority + 1
+        else rstd.priority = 1
 
         rstd.created_by = req.fullname
         rstd.updated_by = req.fullname
@@ -88,7 +68,7 @@ exports.FetchOneReviewStatusById = async (req, res) => {
         const rstId = req.params.rstId // rstId = review status id
 
         const startTime = Date.now()
-        const forstbi = await rstm.FetchOneReviewStatusById(rstId) // forstbi = fetch one review status by id
+        const forstbi = await rstm.FetchOneReviewStatusById({ review_status_id: rstId }) // forstbi = fetch one review status by id
         if (!forstbi) return msg(res, 404, { message: 'Data not found!' })
         const endTime = Date.now() - startTime
 
@@ -107,53 +87,33 @@ exports.FetchOneReviewStatusById = async (req, res) => {
 exports.UpdateReviewStatus = async (req, res) => {
     try {
         const rstId = req.params.rstId // rstId = review status id
-        const forstbi = await rstm.FetchOneReviewStatusById(rstId) // forstbi = fetch one review status by id
+        const forstbi = await rstm.FetchOneReviewStatusById({ review_status_id: rstId }) // forstbi = fetch one review status by id
         if (!forstbi) return msg(res, 404, { message: 'Data not found!' })
 
         const rstd = req.body
 
-        // ตรวจสอบค่าซ้ำ โดยเก็บค่า duplicate message ไว้ก่อน
-        const duplicateStatus = []
-        const duplicateMessage = []
-        let hasEmptyValue = false // Flag สำหรับตรวจสอบค่าที่ว่าง
+        if (!rstd.review_status_name) return msg(res, 400, { message: 'กรุณากรอกสถานะการตรวจสอบ!' })
+        if (!rstd.patient_service_id) return msg(res, 400, { message: 'กรุณากรอกกลุ่มคนไข้!' })
 
-        await Promise.all(
-            Object.entries(rstd).map(async ([key, value]) => {
-                // ถ้าพบค่าว่าง ให้ตั้งค่า flag เป็น true
-                if (!value && key !== 'review_status_type') hasEmptyValue = true
+        const cpsi = await rstm.CheckPatientServiceId({ patient_service_id: rstd.patient_service_id })
+        if (!cpsi) return msg(res, 404, { message: 'ไม่มีข้อมูลคำระบุของกลุ่มคนไข้ที่เลือกมากรุณาตรวจสอบ!' })
 
-                // ตรวจสอบค่าซ้ำเฉพาะ field ที่ไม่ว่าง
-                if (value && key === 'review_status_name') {
-                    const cu = await rstm.CheckUnique(key, value) // cu = CheckUnique
-                    if (cu) {
-                        duplicateStatus.push(409)
-                        duplicateMessage.push(`( ${value} ) มีข้อมูลในระบบแล้ว ไม่อนุญาตให้บันทึกข้อมูลซ้ำ!`)
-                    }
-                }
+        const cu = await rstm.CheckUnique({
+            review_status_name: rstd.review_status_name,
+            patient_service_id: rstd.patient_service_id
+        })
+        if (cu) return msg(res, 409, {
+            message: `มีข้อมูล ${rstd.review_status_name} ในกลุ่มคนไข้ ${cpsi.patient_service_name_english} อยู่แล้วไม่อนุญาตให้บันทึกข้อมูลซ้ำในกลุ่มคนไข้เดียวกัน!`
+        })
 
-                if (value && key === 'patient_service_id') {
-                    const cptsi = await rstm.CheckPatientServiceId(value) // cptsi = check patient service id
-                    if (!cptsi) {
-                        duplicateStatus.push(404)
-                        duplicateMessage.push(`ไม่มีข้อมูลคำระบุของกลุ่มคนไข้ที่เลือกมากรุณาตรวจสอบ!`)
-                    }
-                }
-            })
-        )
-
-        // ถ้ามีค่าที่ว่าง ให้เพิ่มข้อความแค่ครั้งเดียว
-        if (hasEmptyValue) {
-            duplicateMessage.unshift("กรุณากรอกข้อมูลให้ครบถ้วน!")
-            return msg(res, 400, { message: duplicateMessage[0] })
-        }
-
-        // ถ้ามีข้อมูลซ้ำหรือค่าที่ว่าง ให้ส่ง response กลับครั้งเดียว
-        if (duplicateMessage.length > 0) return msg(res, Math.max(...duplicateStatus), { message: duplicateMessage.join(" AND ") })
+        const cPriority = await rstm.CheckPriority({ patient_service_id: rstd.patient_service_id })
+        if (cPriority) rstd.priority = cPriority.priority + 1
+        else rstd.priority = 1
 
         rstd.updated_by = req.fullname
 
         const startTime = Date.now()
-        const urst = await rstm.UpdateReviewStatus(rstId, rstd) // urst = update review status
+        const urst = await rstm.UpdateReviewStatus({ review_status_id: rstId }, rstd) // urst = update review status
         const endTime = Date.now() - startTime
 
         // Set and Insert Log
@@ -171,11 +131,11 @@ exports.UpdateReviewStatus = async (req, res) => {
 exports.RemoveReviewStatus = async (req, res) => {
     try {
         const rstId = req.params.rstId // rstId = review status id
-        const forstbi = await rstm.FetchOneReviewStatusById(rstId) // forstbi = fetch one review status by id
+        const forstbi = await rstm.FetchOneReviewStatusById({ review_status_id: rstId }) // forstbi = fetch one review status by id
         if (!forstbi) return msg(res, 404, { message: 'Data not found!' })
 
         const startTime = Date.now()
-        const rrst = await rstm.RemoveReviewStatus(rstId) // rrst = remove review status
+        const rrst = await rstm.RemoveReviewStatus({ review_status_id: rstId }) // rrst = remove review status
         const endTime = Date.now() - startTime
 
         // Set and Insert Log

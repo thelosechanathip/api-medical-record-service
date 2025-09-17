@@ -1,10 +1,11 @@
 const pm = require('../../libs/prisma')
 const db_h = require('../../libs/db_h')
+const db_b = require('../../libs/db_b')
 
 // ---------- Helpers ----------
 const pickFirst = (rows) => (Array.isArray(rows) && rows.length ? rows[0] : null)
 
-exports.InsertLog = async (data) => await pm.content_of_medical_record_logs.create({ data: data })
+exports.InsertLog = async (data) => await pm.form_ipd_logs.create({ data: data })
 
 // Remove Start #################################################################################################################################
 exports.RemoveFormIpdReviewStatusResult = async (form_ipd_id) =>
@@ -109,14 +110,114 @@ exports.FetchPatientInHos = async (patient_an) => {
 exports.FetchContentOfMedicalRecordById = async (patient_service_id) => {
     return await pm.content_of_medical_records.findMany({
         where: { patient_service_id: patient_service_id },
-        select: { content_of_medical_record_id: true, content_of_medical_record_name: true },
-        orderBy: { created_at: 'asc' }
+        select: { content_of_medical_record_id: true },
+        orderBy: { priority: 'asc' }
     })
 }
+
+exports.FetchPasswordInBackoffice = async (fullname) => {
+    const [rows] = await db_b.query(
+        `
+            SELECT
+                u.password
+            FROM users AS u
+            WHERE u.name = ?
+            LIMIT 1
+        `, [fullname]
+    )
+    return pickFirst(rows)
+}
+
+exports.FetchAnInPatient = async (data) => await pm.patients.findFirst({ where: data, select: { patient_id: true } })
+
+exports.FetchPatientIdInFormIpd = async (data) => await pm.form_ipds.findFirst({ where: data, select: { form_ipd_id: true } })
+
+exports.FetchOverallFindingByPatientId = async (patient_service_id) => {
+    return await pm.overall_finding.findMany({
+        where: { patient_service_id: patient_service_id },
+        select: { overall_finding_id: true },
+        orderBy: { priority: 'asc' }
+    })
+}
+
+exports.FetchOneFormIpdContentOfMedicalRecordResult = async (data) =>
+    await pm.form_ipd_content_of_medical_record_results.findFirst({ where: data })
+
+exports.FetchOneFormIpdOverallFindingResult = async (data) =>
+    await pm.form_ipd_overall_finding_results.findFirst({ where: data })
+
+exports.FetchOneRSTOnReviewStatus = async (data) =>
+    await pm.review_status.findFirst({ where: data, select: { review_status_type: true } })
+
+exports.CheckUniqueFormIpdReviewStatusResult = async (data) =>
+    await pm.form_ipd_review_status_results.findFirst({ where: data, select: { form_ipd_id: true } })
 // Fetch End #################################################################################################################################
 
 // Insert Start #################################################################################################################################
 exports.InsertPatient = async (data) => await pm.patients.create({ data: { ...data } })
 
 exports.InsertFormIpd = async (data) => await pm.form_ipds.create({ data: { ...data } })
+
+exports.InsertFormIpdContentOfMedicalRecordResult = async (data) =>
+    await pm.form_ipd_content_of_medical_record_results.createMany({ data: data })
+
+exports.InsertFormIpdOverallFindingResult = async (data) =>
+    await pm.form_ipd_overall_finding_results.createMany({ data: data })
+
+exports.InsertFormIpdReviewStatusResult = async (data) =>
+    await pm.form_ipd_review_status_results.create({ data: data })
 // Insert End #################################################################################################################################
+
+// Update Start #################################################################################################################################
+exports.UpdateFormIpdContentOfMedicalRecordResult = async (row, formIpdId) => {
+    // เตรียม payload ตัด field ที่อาจเป็น undefined ออก
+    const data = {
+        na: row.na,
+        missing: row.missing,
+        no: row.no,
+        criterion_number_1: row.criterion_number_1,
+        criterion_number_2: row.criterion_number_2,
+        criterion_number_3: row.criterion_number_3,
+        criterion_number_4: row.criterion_number_4,
+        criterion_number_5: row.criterion_number_5,
+        criterion_number_6: row.criterion_number_6,
+        criterion_number_7: row.criterion_number_7,
+        criterion_number_8: row.criterion_number_8,
+        criterion_number_9: row.criterion_number_9,
+        point_deducted: row.point_deducted,
+        total_score: row.total_score,
+        comment: row.comment,
+        updated_by: row.updated_by,
+    }
+
+    // ลบ key ที่เป็น undefined
+    Object.keys(data).forEach(k => data[k] === undefined && delete data[k])
+    return pm.form_ipd_content_of_medical_record_results.update({
+        where: {
+            form_ipd_id: formIpdId,
+            content_of_medical_record_id: row.content_of_medical_record_id,
+            form_ipd_content_of_medical_record_result_id: row.form_ipd_content_of_medical_record_result_id,
+        },
+        data: data,
+    })
+}
+
+exports.UpdateFormIpdOverallFindingResult = async (row, formIpdId) => {
+    const data = {
+        overall_finding_result: row.overall_finding_result,
+        updated_by: row.updated_by,
+    }
+
+    // ลบ key ที่เป็น undefined
+    Object.keys(data).forEach(k => data[k] === undefined && delete data[k])
+
+    return pm.form_ipd_overall_finding_results.update({
+        where: {
+            form_ipd_id: formIpdId,
+            overall_finding_id: row.overall_finding_id,
+            form_ipd_overall_finding_result_id: row.form_ipd_overall_finding_result_id,
+        },
+        data,
+    })
+}
+// Update End #################################################################################################################################

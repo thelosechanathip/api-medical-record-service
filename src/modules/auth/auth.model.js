@@ -10,16 +10,16 @@ exports.InsertLog = async (data) => await pm.auth_logs.create({ data: data })
 exports.FetchUser = async (username) => {
     const [rows] = await db_b.query(
         `
-      SELECT
-        u.id,
-        u.name  AS fullname,
-        u.username,
-        u.password,
-        u.PERSON_ID  AS person_id
-      FROM users AS u
-      WHERE u.username = ?
-      LIMIT 1
-    `,
+            SELECT
+                u.id,
+                u.name  AS fullname,
+                u.username,
+                u.password,
+                u.PERSON_ID  AS person_id
+            FROM users AS u
+            WHERE u.username = ?
+            LIMIT 1
+        `,
         [username]
     )
     return pickFirst(rows)
