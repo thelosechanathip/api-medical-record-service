@@ -33,6 +33,7 @@ exports.FetchOnePatientService = async () =>
 exports.FetchPatientInMra = async (key, value) =>
     await pm.patients.findFirst({ where: { [key]: value }, select: { patient_id: true } })
 
+// ดึงข้อมูล form_ipd_id จากตาราง form_ipds อ้างอิงจาก patient_id
 exports.FetchOneFormIpdIdByPatientId = async (patient_id) =>
     await pm.form_ipds.findFirst({ where: { patient_id: patient_id }, select: { form_ipd_id: true } })
 
@@ -128,7 +129,9 @@ exports.FetchPasswordInBackoffice = async (fullname) => {
     return pickFirst(rows)
 }
 
-exports.FetchAnInPatient = async (data) => await pm.patients.findFirst({ where: data, select: { patient_id: true } })
+// ดึงข้อมูล patient_id จากตาราง patients อ้างอิงจาก patient_an
+exports.FetchAnInPatient = async (patient_an) =>
+    await pm.patients.findFirst({ where: { patient_an: patient_an }, select: { patient_id: true } })
 
 exports.FetchPatientIdInFormIpd = async (data) => await pm.form_ipds.findFirst({ where: data, select: { form_ipd_id: true } })
 
@@ -140,8 +143,13 @@ exports.FetchOverallFindingByPatientId = async (patient_service_id) => {
     })
 }
 
-exports.FetchOneFormIpdContentOfMedicalRecordResult = async (data) =>
-    await pm.form_ipd_content_of_medical_record_results.findFirst({ where: data })
+exports.FetchOneFormIpdContentOfMedicalRecordResult = async (form_ipd_content_of_medical_record_result_id, content_of_medical_record_id) =>
+    await pm.form_ipd_content_of_medical_record_results.findFirst({
+        where: {
+            form_ipd_content_of_medical_record_result_id: form_ipd_content_of_medical_record_result_id,
+            content_of_medical_record_id: content_of_medical_record_id
+        }
+    })
 
 exports.FetchOneFormIpdOverallFindingResult = async (data) =>
     await pm.form_ipd_overall_finding_results.findFirst({ where: data })

@@ -100,30 +100,35 @@ exports.GenerateForm = async (req, res) => {
 // Update data to Form
 exports.UpdateForm = async (req, res) => {
     try {
-        const data = req.body
+        const data = req.body // รับค่า body มาจาก User
+
+        // Set ข้อมูลของผู้ที่อัพเดทข้อมูล
         const fullnamePayload = {
             updated_by: req.fullname
         }
 
         const startTime = Date.now()
-        const faip = await mraM.FetchAnInPatient({ patient_an: req.params.patient_an })
+        const faip = await mraM.FetchAnInPatient(req.params.patient_an) // ดึงข้อมูล patient_id จากตาราง patients อ้างอิงจาก patient_an
         if (!faip) return msg(res, 404, { message: `ไม่พอข้อมูล ${an} นี่ในระบบ MRA IPD` })
 
-        const fOFIIBPI = await mraM.FetchOneFormIpdIdByPatientId(faip.patient_id) // ดึงข้อมูลจากตาราง form_ipds อ้างอิงจาก patient_id
+        const fOFIIBPI = await mraM.FetchOneFormIpdIdByPatientId(faip.patient_id) // ดึงข้อมูล form_ipd_id จากตาราง form_ipds อ้างอิงจาก patient_id
         if (fOFIIBPI) {
-            const { content } = data
+            const { content } = data // แยกข้อมูล content ออกมาจาก body
             let ContentErrorResult = []
             for (i of content) {
-                const result = await mraM.FetchOneFormIpdContentOfMedicalRecordResult({
-                    form_ipd_content_of_medical_record_result_id: i.form_ipd_content_of_medical_record_result_id,
-                    content_of_medical_record_id: i.content_of_medical_record_id
-                })
+                /*
+                    ดึงข้อมูล form_ipd_content_of_medical_record_results อ้างอิงจาก form_ipd_content_of_medical_record_result_id, content_of_medical_record_id
+                    และตรวจสอบว่ามีข้อมูลของ Form ContentOfMedicalRecordResult นี้อยู่ในระบบ MRA IPD หรือไม่
+                */
+                const result = await mraM.FetchOneFormIpdContentOfMedicalRecordResult(
+                    i.form_ipd_content_of_medical_record_result_id, i.content_of_medical_record_id
+                )
                 if (!result) ContentErrorResult.push(
                     `ไม่พอข้อมูล ${i.form_ipd_content_of_medical_record_result_id} หรือ ${i.content_of_medical_record_id} นี่ในระบบ MRA IPD`
                 )
             }
 
-            if (ContentErrorResult.length > 0) return msg(res, 404, { message: ContentErrorResult.join(" AND ") })
+            if (ContentErrorResult.length > 0) return msg(res, 404, { message: ContentErrorResult.join(" AND ") }) // ถ้าไม่พอข้อมูลในระบบ MRA IPD จะ return 404
 
             // คีย์ที่ไม่ต้องการให้รวมในการคำนวณ (ยกเว้น point_deducted ที่จะลบทีหลัง)
             const excludedKeys = [
