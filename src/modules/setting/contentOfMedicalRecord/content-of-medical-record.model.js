@@ -6,7 +6,8 @@ exports.FetchAllContentOfMedicalRecords = async () => await pm.content_of_medica
     include: {
         patient_service_id: false,
         patient_services: true
-    }
+    },
+    orderBy: { priority: 'asc' }
 })
 
 exports.CheckUnique = async (data) => await pm.content_of_medical_records.findFirst({ where: data })
@@ -29,6 +30,24 @@ exports.FetchOneContentOfMedicalRecordById = async (id) =>
 
 exports.UpdateContentOfMedicalRecord = async (id, data) =>
     await pm.content_of_medical_records.update({ where: id, data: data })
+
+exports.CheckForeignKey = async () => {
+    return await pm.$queryRaw`
+        SELECT TABLE_NAME, COLUMN_NAME
+        FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE
+        WHERE REFERENCED_TABLE_NAME = 'content_of_medical_records'
+        AND REFERENCED_COLUMN_NAME = 'content_of_medical_record_id'
+        AND EXISTS (
+            SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = KEY_COLUMN_USAGE.TABLE_NAME
+        )
+    `
+}
+
+exports.CheckForeignKeyData = async (tableName, columnName, id) => {
+    return await pm.$queryRawUnsafe(`
+        SELECT 1 FROM ${tableName} WHERE ${columnName} = "${id}" LIMIT 1
+    `)
+}
 
 exports.RemoveContentOfMedicalRecord = async (id) =>
     await pm.content_of_medical_records.delete({ where: id })

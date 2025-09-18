@@ -134,6 +134,24 @@ exports.RemoveContentOfMedicalRecord = async (req, res) => {
         const focomr = await comrm.FetchOneContentOfMedicalRecordById({ content_of_medical_record_id: comrId }) // focomr = fetch one content of medical record by id
         if (!focomr) return msg(res, 404, { message: 'Data not found!' })
 
+        const CFk = await comrm.CheckForeignKey()
+
+        if (CFk.length > 0) {
+            let hasReference = false
+
+            for (const row of CFk) {
+                const tableName = row.TABLE_NAME
+                const columnName = row.COLUMN_NAME
+
+                const checkData = await comrm.CheckForeignKeyData(tableName, columnName, comrId)
+
+                if (checkData.length > 0) hasReference = true
+            }
+
+            // ถ้ามีตารางที่อ้างอิงอยู่ → ห้ามลบ
+            if (hasReference) return msg(res, 400, { message: "ไม่สามารถลบได้ เนื่องจากข้อมูลนี้ยังถูกใช้งานอยู่ กรุณาลบหรือแก้ไขข้อมูลที่เกี่ยวข้องก่อน!" })
+        }
+
         const startTime = Date.now()
         const rcomr = await comrm.RemoveContentOfMedicalRecord({ content_of_medical_record_id: comrId }) // rcomr = remove content of medical record
         const endTime = Date.now() - startTime

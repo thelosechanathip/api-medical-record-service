@@ -3,13 +3,77 @@ const { setLog } = require('../../services/setLog.service')
 const { ComparePassword } = require('../../services/bcrypt')
 const mraM = require('./mra.model') // mraM = mra model
 
+exports.FetchAllMedicalRecordAuditIPD = async (req, res) => {
+    try {
+        const startTime = Date.now()
+
+        /*
+            ดึงข้อมูลทั้งหมดของตาราง form_ipds
+            join
+                patients, form_ipd_content_of_medical_record_results, form_ipd_overall_finding_results, form_ipd_review_status_results
+        */
+        const faMraIpd = await mraM.FetchAllMedicalRecordAuditIPD()
+        if (faMraIpd.length === 0) return msg(res, 404, { message: 'Data not found!' })
+
+        const resultsWithDefaultSum = []
+
+        for (const data of faMraIpd) {
+            let totalDefaultSum = 0
+            let totalScoreSum = 0
+            for (const content of data.form_ipd_content_of_medical_record_results) {
+                if (content.na === false && content.missing === false && content.no === false) {
+                    const comrId = content.content_of_medical_records.content_of_medical_record_id
+
+                    // ดึงข้อมูล 1 record จากตาราง content_of_medical_records อ้างอิงจาก content_of_medical_record_id
+                    const checkType = await mraM.FetchTypeContentOfMedicalRecordById(comrId)
+                    const comrKeys = Object.keys(checkType).filter(k => k.startsWith("criterion_number_"))
+                    const itemSum = comrKeys.reduce((acc, key) => {
+                        const value = checkType[key]
+                        if (value === true) {
+                            return acc + 1
+                        }
+                        return acc
+                    }, 0)
+                    totalDefaultSum += itemSum
+
+                    if (typeof content.total_score === 'number') {
+                        totalScoreSum += content.total_score
+                    }
+                }
+            }
+            data.totalDefaultSum = totalDefaultSum
+            data.totalScoreSum = totalScoreSum
+            const resultSum = (totalScoreSum / totalDefaultSum) * 100
+            const formattedResultSum = resultSum.toFixed(2)
+            data.formattedResultSum = parseFloat(formattedResultSum)
+            resultsWithDefaultSum.push(data)
+        }
+
+        const endTime = Date.now() - startTime
+
+        // Set and Insert Log
+        const sl = setLog(req, req.fullname, endTime, faMraIpd)
+        await mraM.InsertLog(sl)
+
+        return msg(res, 200, { data: faMraIpd })
+    } catch (err) {
+        console.log('FetchData : ', err)
+        return msg(res, 500, { message: err.message })
+    }
+}
+
 // สร้าง Form
 exports.GenerateForm = async (req, res) => {
-    const mraD = req.body // รับค่าจาก User
-    const ps = await mraM.FetchOnePatientService() // ดึงค่า patient_service_id อ้างอิงจากกลุ่ม IPD
+    // รับค่าจาก User
+    const mraD = req.body
+
+    // ดึงข้อมูล patient_service_id จำนวน 1 record จากตาราง patient_services อ้างอิงจาก patient_service_name_english
+    const ps = await mraM.FetchOnePatientService()
 
     try {
-        const fh = await mraM.FetchHcode() // ดึงข้อมูลสถานพยาบาล
+        // ดึงข้อมูล hcode_id จำนวน 1 record จากตาราง hcodes
+        const fh = await mraM.FetchHcode()
+
         // เตรียมข้อมูลของผู้ใช้งาน
         const fullnamePayload = {
             created_by: req.fullname,
@@ -19,19 +83,30 @@ exports.GenerateForm = async (req, res) => {
         // ตรวจสอบว่ามีการกรอก AN เข้ามาหรือไม่?
         if (!mraD.patient_an) return msg(res, 400, { message: 'กรุณากรอก AN ที่ต้องการบันทึก!' })
 
-        const fPIM = await mraM.FetchPatientInMra({ patient_an: mraD.patient_an }) // ดึงข้อมูลผู้ใช้งานจากตาราง patients
+        // ดึงข้อมูล patient_id จำนวน 1 record จากตาราง patients อ้างอิงจาก patient_an
+        const fPIM = await mraM.FetchPatientInMra({ patient_an: mraD.patient_an })
         if (fPIM) {
-            const formData = await mraM.FetchOneFormIpdIdByPatientId(fPIM.patient_id) // ดึงข้อมูล Form IPD อ้างอิงจาก patient_id
-            const formIRSR = await mraM.FetchFormIRSRInMra(formData.patient_id) // ดึงข้อมูล form_ipd_review_status_result อ้างอิงจาก patient_id
+            // ดึงข้อมูล form_ipd_id จำนวน 1 record จากตาราง form_ipds อ้างอิงจาก patient_id
+            const formData = await mraM.FetchOneFormIpdIdByPatientId(fPIM.patient_id)
+
+            // ดึงข้อมูล review_status_id จำนวน 1 record จากตาราง form_ipd_review_status_results อ้างอิงจาก form_ipd_id
+            const formIRSR = await mraM.FetchFormIRSRInMra(formData.patient_id)
             if (formIRSR) {
                 return msg(res, 409, { message: `ได้มีข้อมูลของ ${mraD.patient_an} อยู่ในระบบแล้ว ไม่อนุญาติให้บันทึกข้อมูลซ้ำ!` })
             } else if (formIRSR === null || formIRSR === '') {
-                const result = await mraM.FetchOneData(fPIM.patient_id) // ดึงข้อมูล Form IPD อ้างอิงจาก patient_id
+                /*
+                    ดึงข้อมูลทั้งหมดของตาราาง form_ipds ที่มีการ join
+                        patients,
+                        form_ipd_content_of_medical_record_results,
+                        form_ipd_overall_finding_results,
+                        form_ipd_review_status_results อ้างอิงจาก patient_id
+                */
+                const result = await mraM.FetchOneData(fPIM.patient_id)
                 return msg(res, 200, { data: result })
             }
         }
 
-        // ดึงข้อมูลคนไข้จากระบบ HOSxP
+        // ดึงข้อมูล คนไข้ จำนวน 1 record มาจากระบบ HOSxP อ้างอิงจาก patient_an
         const fpih = await mraM.FetchPatientInHos(mraD.patient_an)
 
         // Set ข้อมูลคนไข้ก่อนที่จะบันทึกไปยัง MRA ตาราง patients
@@ -49,7 +124,9 @@ exports.GenerateForm = async (req, res) => {
         }
 
         const startTime = Date.now()
-        const ip = await mraM.InsertPatient(pPayload) // บันทึกข้อมูลคนไข้ไปยัง MRA ตาราง patients
+
+        // บันทึกข้อมูลไปยังตาราง patients
+        const ip = await mraM.InsertPatient(pPayload)
         if (ip) {
             // Set ข้อมูลคนไข้ก่อนที่จะทำการสร้าง Form สำหรับบันทึกข้อมูล
             const fiPayload = {
@@ -57,9 +134,15 @@ exports.GenerateForm = async (req, res) => {
                 ...fullnamePayload
             }
 
-            const ifi = await mraM.InsertFormIpd(fiPayload) // สร้าง Form IPD สำหรับบันทึกข้อมูล Chart ของคนไข้
+            // บันทึกข้อมูลไปยังตาราง form_ipds
+            const ifi = await mraM.InsertFormIpd(fiPayload)
             if (ifi) {
-                const fComri = await mraM.FetchContentOfMedicalRecordById(ps.patient_service_id) // ดึงข้อมูลจากตาราง content_of_medical_records ที่อยู่ในกลุ่ม IPD
+                /*
+                    ดึงข้อมูลทั้งหมด content_of_medical_record_id จากตาราง content_of_medical_records
+                    อ้างอิงจาก patient_service_id
+                    และเรียงลำดับจากน้อยไปมากโดยอ้างอิง priority
+                */
+                const fComri = await mraM.FetchContentOfMedicalRecordByPatientId(ps.patient_service_id)
                 // Set ข้อมูลก่อนที่จะทำการสร้าง Form ContentOfmedicalRecordResult
                 const setComrPayload = fComri.map((item) => {
                     return {
@@ -68,9 +151,11 @@ exports.GenerateForm = async (req, res) => {
                         ...fullnamePayload
                     }
                 })
-                const iFiComdrr = await mraM.InsertFormIpdContentOfMedicalRecordResult(setComrPayload) // สร้าง Form ContentOfMedicalRecordResult
+                // บันทึกข้อมูลไปยังตาราง form_ipd_content_of_medical_record_results แบบหลาย record พร้อมกัน
+                const iFiComdrr = await mraM.InsertFormIpdContentOfMedicalRecordResult(setComrPayload)
                 if (iFiComdrr) {
-                    const fOf = await mraM.FetchOverallFindingByPatientId(ps.patient_service_id) // ดึงข้อมูลจากตาราง overall_finding ที่อยู่ในกลุ่ม IPD
+                    // ดึงข้อมูลทั้งหมด overall_finding_id จากตาราง overall_finding อ้างอิงจาก patient_service_id และเรียงลำดับจากน้อยไปมากโดยอ้างอิง priority
+                    const fOf = await mraM.FetchOverallFindingByPatientId(ps.patient_service_id)
                     const setOfPayload = fOf.map((item) => {
                         return {
                             form_ipd_id: ifi.form_ipd_id,
@@ -78,7 +163,8 @@ exports.GenerateForm = async (req, res) => {
                             ...fullnamePayload
                         }
                     })
-                    await mraM.InsertFormIpdOverallFindingResult(setOfPayload) // สร้าง Form OverallFindingResult
+                    // บันทึกข้อมูลไปยังตาราง form_ipd_overall_finding_results แบบหลาย record พร้อมกัน
+                    await mraM.InsertFormIpdOverallFindingResult(setOfPayload)
                 }
             }
         }
@@ -86,10 +172,17 @@ exports.GenerateForm = async (req, res) => {
         const endTime = Date.now() - startTime
 
         // Set and Insert Log
-        const sl = setLog(req, req.fullname, endTime, ip) // sl = set log
+        const sl = setLog(req, req.fullname, endTime, ip)
         await mraM.InsertLog(sl)
 
-        const result = await mraM.FetchOneData(ip.patient_id) // ดึงข้อมูล Form IPD อ้างอิงจาก patient_id
+        /*
+            ดึงข้อมูลทั้งหมดของตาราง form_ipds
+            join
+                patients, form_ipd_content_of_medical_record_results, form_ipd_overall_finding_results, form_ipd_review_status_results
+            อ้างอิงจาก
+                patient_id
+        */
+        const result = await mraM.FetchOneData(ip.patient_id)
         return msg(res, 200, { data: result })
     } catch (err) {
         console.log('GenerateForm : ', err)
@@ -103,9 +196,7 @@ exports.UpdateForm = async (req, res) => {
         const data = req.body // รับค่า body มาจาก User
 
         // Set ข้อมูลของผู้ที่อัพเดทข้อมูล
-        const fullnamePayload = {
-            updated_by: req.fullname
-        }
+        const fullnamePayload = { updated_by: req.fullname }
 
         const startTime = Date.now()
         const faip = await mraM.FetchAnInPatient(req.params.patient_an) // ดึงข้อมูล patient_id จากตาราง patients อ้างอิงจาก patient_an
@@ -114,19 +205,59 @@ exports.UpdateForm = async (req, res) => {
         const fOFIIBPI = await mraM.FetchOneFormIpdIdByPatientId(faip.patient_id) // ดึงข้อมูล form_ipd_id จากตาราง form_ipds อ้างอิงจาก patient_id
         if (fOFIIBPI) {
             const { content } = data // แยกข้อมูล content ออกมาจาก body
+
+            // ตรวจสอบค่า Array ที่ส่งมาพร้อมกันว่ามีซ้ำหรือไม่?
+            // const FiComrrI = content.map(i => i.form_ipd_content_of_medical_record_result_id)
+            // const dupFiComrrI = FiComrrI.filter((id, idx) => FiComrrI.indexOf(id) !== idx)
+            // if (dupFiComrrI.length > 0) {
+
+            // }
+
             let ContentErrorResult = []
-            for (i of content) {
+            let ContentTypeErrorResult = []
+            for (row of content) {
                 /*
-                    ดึงข้อมูล form_ipd_content_of_medical_record_results อ้างอิงจาก form_ipd_content_of_medical_record_result_id, content_of_medical_record_id
-                    และตรวจสอบว่ามีข้อมูลของ Form ContentOfMedicalRecordResult นี้อยู่ในระบบ MRA IPD หรือไม่
+                    ดึงข้อมูล 1 record จากตาราง form_ipd_content_of_medical_record_results
+                    อ้างอิงจาก
+                        form_ipd_content_of_medical_record_result_id, content_of_medical_record_id
                 */
-                const result = await mraM.FetchOneFormIpdContentOfMedicalRecordResult(
-                    i.form_ipd_content_of_medical_record_result_id, i.content_of_medical_record_id
+                const FoFiComrr = await mraM.FetchOneFormIpdContentOfMedicalRecordResult(
+                    row.form_ipd_content_of_medical_record_result_id, row.content_of_medical_record_id
                 )
-                if (!result) ContentErrorResult.push(
-                    `ไม่พอข้อมูล ${i.form_ipd_content_of_medical_record_result_id} หรือ ${i.content_of_medical_record_id} นี่ในระบบ MRA IPD`
-                )
+                if (!FoFiComrr) {
+                    ContentErrorResult.push(
+                        `ไม่พอข้อมูล ${row.form_ipd_content_of_medical_record_result_id} หรือ ${row.content_of_medical_record_id} นี่ในระบบ MRA IPD`
+                    )
+                    continue
+                }
+
+                // ค้นหา Key ของ Object ที่คำนำหน้าว่า: criterion_number_
+                const test = Object.entries(row).filter(([k, v]) => k.startsWith("criterion_number_")).map(([k, v]) => k)
+                for (k of test) {
+                    const field = k.endsWith("_type") ? k : `${k}_type`
+                    /*
+                        ดึงข้อมูล
+                            content_of_medical_record_name, criterion_number_1-9_type
+                        จากตาราง
+                            content_of_medical_records
+                        อ้างอิงจาก
+                            content_of_medical_record_id
+                    */
+                    const t1 = await mraM.FetchOneContentOfMedicalRecordById(row.content_of_medical_record_id, field)
+                    if (t1) {
+                        // สร้างตัวแปร v เพื่อเก็บค่าของ field (t1: value, field: key)
+                        const v = t1[field]
+                        if (v === false) {
+                            ContentTypeErrorResult.push(
+                                `ไม่สามารถบันทึกข้อมูลได้เนื่องจาก เกณฑ์ข้อ: ${Object.keys(t1)[0].match(/\d+/)[0]} ของหัวข้อ: ` +
+                                `${t1.content_of_medical_record_name} ไม่ได้อนุญาตให้กรอกคะแนน`
+                            )
+                        }
+                    }
+                }
             }
+
+            if (ContentTypeErrorResult.length > 0) return msg(res, 400, { message: ContentTypeErrorResult.join(" AND ") })
 
             if (ContentErrorResult.length > 0) return msg(res, 404, { message: ContentErrorResult.join(" AND ") }) // ถ้าไม่พอข้อมูลในระบบ MRA IPD จะ return 404
 
@@ -166,6 +297,11 @@ exports.UpdateForm = async (req, res) => {
                 }
             })
 
+            /*
+                อัพเดทข้อมูลไปยังตาราง form_ipd_content_of_medical_record_results
+                อ้างอิงจาก
+                    formIpdId, content_of_medical_record_id, form_ipd_content_of_medical_record_result_id
+            */
             const updatePromissFICOMR = rFICOMR.map(i =>
                 mraM.UpdateFormIpdContentOfMedicalRecordResult(i, fOFIIBPI.form_ipd_id)
             )
@@ -175,10 +311,14 @@ exports.UpdateForm = async (req, res) => {
                 const { overall } = data
                 let OverallErrorResult = []
                 for (i of overall) {
-                    const result = await mraM.FetchOneFormIpdOverallFindingResult({
-                        form_ipd_overall_finding_result_id: i.form_ipd_overall_finding_result_id,
-                        overall_finding_id: i.overall_finding_id
-                    })
+                    /*
+                        ดึงข้อมูล 1 record จากตาราง form_ipd_overall_finding_results
+                        อ้างอิงจาก
+                            form_ipd_overall_finding_result_id, overall_finding_id
+                    */
+                    const result = await mraM.FetchOneFormIpdOverallFindingResult(
+                        i.form_ipd_overall_finding_result_id, i.overall_finding_id
+                    )
                     if (!result) OverallErrorResult.push(
                         `ไม่พอข้อมูล ${i.form_ipd_overall_finding_result_id} หรือ ${i.overall_finding_id} นี่ในระบบ MRA IPD`
                     )
@@ -193,6 +333,11 @@ exports.UpdateForm = async (req, res) => {
                     }
                 })
 
+                /*
+                    อัพเดทข้อมูลไปยังตาราง form_ipd_overall_finding_results
+                    อ้างอิงจาก
+                        form_ipd_id, overall_finding_id, form_ipd_overall_finding_result_id
+                */
                 const updatePromissesFIOF = rFIOF.map(i =>
                     mraM.UpdateFormIpdOverallFindingResult(i, fOFIIBPI.form_ipd_id)
                 )
@@ -203,14 +348,16 @@ exports.UpdateForm = async (req, res) => {
                     if (Object.keys(rsD).length > 0) {
                         fullnamePayload.created_by = req.fullname
 
-                        const foRstORs = await mraM.FetchOneRSTOnReviewStatus({ review_status_id: rsD.review_status_id })
+                        // ดึงข้อมูล review_status_type จำนวน 1 record จากตาราง review_status อ้างอิงจาก review_status_id
+                        const foRstORs = await mraM.FetchOneRSTOnReviewStatus(rsD.review_status_id)
                         if (foRstORs.review_status_type === true) {
                             if (rsD.review_status_comment === null || rsD.review_status_comment === '') {
                                 return msg(res, 400, { message: 'กรุณากรอกความคิดเห็นสถานะการตรวจสอบ!' })
                             }
                         }
 
-                        const cuFiRsr = await mraM.CheckUniqueFormIpdReviewStatusResult({ form_ipd_id: fOFIIBPI.form_ipd_id })
+                        // ดึงข้อมูล form_ipd_id จำนวน 1 record จากตาราง form_ipd_review_status_results อ้างอิงจาก form_ipd_id
+                        const cuFiRsr = await mraM.CheckUniqueFormIpdReviewStatusResult(fOFIIBPI.form_ipd_id)
                         if (cuFiRsr) return msg(res, 409, { message: 'มีข้อมูลอยู่ในระบบแล้ว ไม่สามารถมีข้อมูลซ้ำได้' })
 
                         const FIRSRPayload = {
@@ -218,6 +365,7 @@ exports.UpdateForm = async (req, res) => {
                             ...rsD,
                             ...fullnamePayload
                         }
+                        // บันทึกข้อมูลไปยังตาราง form_ipd_review_status_results
                         await mraM.InsertFormIpdReviewStatusResult(FIRSRPayload)
                     }
                 }
@@ -246,26 +394,35 @@ exports.RemoveData = async (req, res) => {
         const password = req.body.password
         if (!password) return msg(res, 400, { message: 'กรุณากรอกรหัสผ่านเพื่อยืนยันการลบข้อมูล!' })
 
-        // ตรวจสอบรหัสผ่านก่อนที่จะทำการลบข้อมูล
+        // ดึงข้อมูล password จำนวน 1 record มาจากระบบ Backoffice อ้างอิงจาก fullname
         const fpib = await mraM.FetchPasswordInBackoffice(req.fullname)
         const cp = await ComparePassword(password, fpib.password)
         if (!cp) return msg(res, 400, { message: "รหัสผ่านไม่ถูกต้อง!" })
 
-        // ตรวจสอบว่ามี AN นี้อยู่ในระบบ MRA หรือไม่?
         const startTime = Date.now()
-        const faip = await mraM.FetchAnInPatient({ patient_an: an })
+
+        // ดึงข้อมูล patient_id จำนวน 1 record จากตาราง patients อ้างอิงจาก patient_an
+        const faip = await mraM.FetchAnInPatient(an)
         if (!faip) return msg(res, 404, { message: `ไม่มีข้อมูล ${an} อยู่ในระบบกรุณาตรวจสอบ ${an} เพื่อความถูกต้อง!` })
 
-        const fpiifi = await mraM.FetchPatientIdInFormIpd({ patient_id: faip.patient_id })
+        // ดึงข้อมูล form_ipd_id จำนวน 1 record จากตาราง form_ipds อ้างอิงจาก patient_id
+        const fpiifi = await mraM.FetchPatientIdInFormIpd(faip.patient_id)
 
         if (fpiifi) {
+            // Remove ข้อมูล form_ipd_review_status_results จำนวนหลาย record อ้างอิงจาก form_ipd_id
             await mraM.RemoveFormIpdReviewStatusResult(fpiifi.form_ipd_id)
+
+            // Remove ข้อมูล form_ipd_overall_finding_results จำนวนหลาย record อ้างอิงจาก form_ipd_id
             await mraM.RemoveFormIpdOverallFindingResult(fpiifi.form_ipd_id)
+
+            // Remove ข้อมูล form_ipd_content_of_medical_record_results จำนวนหลาย record อ้างอิงจาก form_ipd_id
             await mraM.RemoveFormIpdContentOfMedicalRecordResult(fpiifi.form_ipd_id)
         }
 
+        // Remove ข้อมูล form_ipds จำนวน 1 record อ้างอิงจาก form_ipd_id
         await mraM.RemoveFormIpd(fpiifi.form_ipd_id)
 
+        // Remove ข้อมูล patients จำนวน 1 record อ้างอิงจาก patient_an และส่งค่า patient_id ที่ลบแล้วกลับคืน
         const removeP = await mraM.RemovePatient(an)
         const endTime = Date.now() - startTime
 
