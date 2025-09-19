@@ -118,7 +118,7 @@ model review_status {
   review_status_type             Boolean? // Type ที่เอาไว้บอกว่าจำเป็นหรือไม่จำเป็นที่จะต้องอธิบายเพิ่มเติม ( 0 = ไม่จำเป็น, 1 = จำเป็น )
   priority                       Int // ลำดับความสำคัญ
   patient_service_id             String? // Foreign Key ของตาราง patient_services( ข้อมูลคำระบุของกลุ่มคนไข้ )
-  patient_service                patient_services?                @relation(fields: [patient_service_id], references: [patient_service_id], onDelete: Restrict)
+  patient_services               patient_services?                @relation(fields: [patient_service_id], references: [patient_service_id], onDelete: Restrict)
   created_at                     DateTime                         @default(now()) // วัน-เวลาที่บันทึก
   created_by                     String?                          @default("admin") // ชื่อผู้บันทึก
   updated_at                     DateTime                         @updatedAt // วัน-เวลาที่อัพเดท
