@@ -4,10 +4,9 @@ exports.InsertLog = async (data) => await pm.content_of_medical_record_logs.crea
 
 exports.FetchAllContentOfMedicalRecords = async () => await pm.content_of_medical_records.findMany({
     include: {
-        patient_service_id: false,
         patient_services: true
     },
-    orderBy: { priority: 'asc', patient_service_id: 'asc' }
+    orderBy: [ { priority: 'asc' }, { patient_services: { patient_service_name_english: 'asc' } } ]
 })
 
 exports.CheckUnique = async (data) => await pm.content_of_medical_records.findFirst({ where: data })
