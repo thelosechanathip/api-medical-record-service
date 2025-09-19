@@ -118,7 +118,7 @@ exports.FetchAllMedicalRecordAuditIPD = async () => {
     อ้างอิงจาก
         patient_id
 */
-exports.FetchOneData = async (patient_id) => {
+exports.FetchOneMedicalRecordAuditIPD = async (patient_id) => {
     return await pm.form_ipds.findMany({
         where: {
             patient_id: patient_id

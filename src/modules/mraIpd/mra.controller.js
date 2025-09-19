@@ -2,6 +2,7 @@ const { msg } = require('../../services/message.service')
 const { setLog } = require('../../services/setLog.service')
 const { ComparePassword } = require('../../services/bcrypt')
 const mraM = require('./mra.model') // mraM = mra model
+const moment = require('moment')
 
 exports.FetchAllMedicalRecordAuditIPD = async (req, res) => {
     try {
@@ -65,9 +66,73 @@ exports.FetchAllMedicalRecordAuditIPD = async (req, res) => {
 exports.FetchOneMedicalRecordAuditIPDByAn = async (req, res) => {
     try {
         const FAIP = await mraM.FetchAnInPatient(req.params.patient_an)
-        return res.send(FAIP)
+        if (!FAIP) return msg(res, 404, { message: `${req.params.patient_an}นี้ไม่มีข้อมูลอยู่ในระบบ!` })
+
+        const startTime = Date.now()
+        const FoMraIpd = await mraM.FetchOneMedicalRecordAuditIPD(FAIP.form_ipd_id)
+        if (!FoMraIpd) return msg(res, 404, { message: 'Data not found!' })
+
+        const resultsWithDefaultSum = []
+
+        for (const data of FoMraIpd) {
+            let totalDefaultSum = 0
+            let totalScoreSum = 0
+            for (const content of data.form_ipd_content_of_medical_record_results) {
+                if (content.na === false && content.missing === false && content.no === false) {
+                    const comrId = content.content_of_medical_records.content_of_medical_record_id
+
+                    const checkType = await mraM.FetchTypeContentOfMedicalRecordById(comrId)
+                    const comrKeys = Object.keys(checkType).filter(k => k.startsWith("criterion_number_"))
+                    const itemSum = comrKeys.reduce((acc, key) => {
+                        const value = checkType[key]
+                        if (value === true) {
+                            return acc + 1
+                        }
+                        return acc
+                    }, 0)
+                    totalDefaultSum += itemSum
+
+                    if (typeof content.total_score === 'number') {
+                        totalScoreSum += content.total_score
+                    }
+                }
+            }
+            data.totalDefaultSum = totalDefaultSum
+            data.totalScoreSum = totalScoreSum
+            const resultSum = totalScoreSum / totalDefaultSum * 100
+            const formattedResultSum = resultSum.toFixed(2)
+            data.formattedResultSum = parseFloat(formattedResultSum)
+            resultsWithDefaultSum.push(data)
+        }
+
+        const endTime = Date.now() - startTime
+
+        // Set and Insert Log
+        const sl = setLog(req, req.fullname, endTime, FoMraIpd)
+        await mraM.InsertLog(sl)
+
+        return msg(res, 200, { data: resultsWithDefaultSum })
     } catch (err) {
-        console.log('FetchAllMedicalRecordAuditIPD : ', err)
+        console.log('FetchOneMedicalRecordAuditIPDByAn : ', err)
+        return msg(res, 500, { message: err.message })
+    }
+}
+
+exports.FetchOnePatientData = async (req, res) => {
+    try {
+        const FPIH = await mraM.FetchPatientInHos(req.params.patient_an)
+        if (!FPIH) return msg(res, 404, { message: `${req.params.patient_an}นี้ไม่มีข้อมูลอยู่ในระบบ HOSxP!` })
+
+        const FAIP = await mraM.FetchAnInPatient(req.params.patient_an)
+        if (FAIP) return msg(res, 409, { message: `${req.params.patient_an} นี้มีข้อมูลอยู่ในระบบ MRA แล้วไม่สามารถบันทึกซ้ำได้` })
+
+        FPIH.vstdate = moment(FPIH.vstdate).format('YYYY-MM-DD')
+        FPIH.regdate = moment(FPIH.vstdate).format('YYYY-MM-DD')
+        FPIH.dchdate = moment(FPIH.vstdate).format('YYYY-MM-DD')
+
+        return msg(res, 200, { data: FPIH })
+    } catch (err) {
+        console.log('FetchOnePatientData : ', err)
         return msg(res, 500, { message: err.message })
     }
 }
@@ -111,7 +176,7 @@ exports.GenerateForm = async (req, res) => {
                         form_ipd_overall_finding_results,
                         form_ipd_review_status_results อ้างอิงจาก patient_id
                 */
-                const result = await mraM.FetchOneData(fPIM.patient_id)
+                const result = await mraM.FetchOneMedicalRecordAuditIPD(fPIM.patient_id)
                 return msg(res, 200, { data: result })
             }
         }
@@ -192,7 +257,7 @@ exports.GenerateForm = async (req, res) => {
             อ้างอิงจาก
                 patient_id
         */
-        const result = await mraM.FetchOneData(ip.patient_id)
+        const result = await mraM.FetchOneMedicalRecordAuditIPD(ip.patient_id)
         return msg(res, 200, { data: result })
     } catch (err) {
         console.log('GenerateForm : ', err)
