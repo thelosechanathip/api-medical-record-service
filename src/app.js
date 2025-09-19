@@ -7,7 +7,9 @@ const pino = require("pino")
 const schedule = require("node-schedule")
 const am = require('./app.model')
 const moment = require('moment')
-require("dotenv").config()
+const dotenv = require('dotenv')
+const dotenvExpand = require('dotenv-expand')
+dotenvExpand.expand(dotenv.config())
 
 // All Routes
 // Auth
