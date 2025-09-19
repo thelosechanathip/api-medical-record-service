@@ -6,7 +6,7 @@ exports.FetchAllContentOfMedicalRecords = async () => await pm.content_of_medica
     include: {
         patient_services: true
     },
-    orderBy: [ { priority: 'asc' }, { patient_services: { patient_service_name_english: 'asc' } } ]
+    orderBy: [ { patient_service_id: 'asc' }, { priority: 'asc' } ]
 })
 
 exports.CheckUnique = async (data) => await pm.content_of_medical_records.findFirst({ where: data })
