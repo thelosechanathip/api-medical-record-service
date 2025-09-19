@@ -56,6 +56,10 @@ exports.CreatePatientService = async (req, res) => {
         // ถ้ามีข้อมูลซ้ำหรือค่าที่ว่าง ให้ส่ง response กลับครั้งเดียว
         if (duplicateMessage.length > 0) return msg(res, Math.max(...duplicateStatus), { message: duplicateMessage.join(" AND ") })
 
+        const cPriority = await ptsm.CheckPriority()
+        if (cPriority) ptsd.priority = cPriority.priority + 1
+        else ptsd.priority = 1
+
         ptsd.created_by = req.fullname
         ptsd.updated_by = req.fullname
 

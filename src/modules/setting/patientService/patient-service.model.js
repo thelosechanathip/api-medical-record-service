@@ -10,6 +10,8 @@ exports.CreatePatientService = async (data) => await pm.patient_services.create(
 
 exports.FetchOnePatientServiceById = async (ptsId) => await pm.patient_services.findFirst({ where: { patient_service_id: ptsId } })
 
+exports.CheckPriority = async () => await pm.patient_services.findFirst({ orderBy: { priority: 'desc' } })
+
 exports.UpdatePatientService = async (ptsId, data) => await pm.patient_services.update({ where: { patient_service_id: ptsId }, data: data })
 
 exports.RemovePatientService = async (ptsId) => await pm.patient_services.delete({ where: { patient_service_id: ptsId } })

@@ -57,7 +57,17 @@ exports.FetchAllMedicalRecordAuditIPD = async (req, res) => {
 
         return msg(res, 200, { data: faMraIpd })
     } catch (err) {
-        console.log('FetchData : ', err)
+        console.log('FetchAllMedicalRecordAuditIPD : ', err)
+        return msg(res, 500, { message: err.message })
+    }
+}
+
+exports.FetchOneMedicalRecordAuditIPDByAn = async (req, res) => {
+    try {
+        const FAIP = await mraM.FetchAnInPatient(req.params.patient_an)
+        return res.send(FAIP)
+    } catch (err) {
+        console.log('FetchAllMedicalRecordAuditIPD : ', err)
         return msg(res, 500, { message: err.message })
     }
 }
