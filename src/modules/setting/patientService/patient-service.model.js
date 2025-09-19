@@ -2,7 +2,7 @@ const pm = require('../../../libs/prisma')
 
 exports.InsertLog = async (data) => await pm.patient_service_logs.create({ data: data })
 
-exports.FetchAllPatientServices = async () => await pm.patient_services.findMany()
+exports.FetchAllPatientServices = async () => await pm.patient_services.findMany({ orderBy: { priority: 'asc' } })
 
 exports.FindFirstPatientService = async (key, value) => await pm.patient_services.findFirst({ where: { [key]: value } })
 
