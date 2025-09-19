@@ -3,6 +3,9 @@ const pm = require('../../../libs/prisma')
 exports.InsertLog = async (data) => await pm.review_status_logs.create({ data: data })
 
 exports.FetchAllReviewStatus = async () => await pm.review_status.findMany({
+    include: {
+        patient_services: true
+    },
     orderBy: [
         { patient_service_id: 'asc' },
         { priority: 'asc' }

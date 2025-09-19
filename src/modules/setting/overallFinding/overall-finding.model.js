@@ -3,6 +3,9 @@ const pm = require('../../../libs/prisma')
 exports.InsertLog = async (data) => await pm.overall_finding_logs.create({ data: data })
 
 exports.FetchAllOverallFinding = async () => await pm.overall_finding.findMany({
+    include: {
+        patient_services: true
+    },
     orderBy: [
         { patient_service_id: 'asc' },
         { priority: 'asc' }
