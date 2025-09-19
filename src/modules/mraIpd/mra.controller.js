@@ -232,8 +232,8 @@ exports.UpdateForm = async (req, res) => {
                 }
 
                 // ค้นหา Key ของ Object ที่คำนำหน้าว่า: criterion_number_
-                const test = Object.entries(row).filter(([k, v]) => k.startsWith("criterion_number_")).map(([k, v]) => k)
-                for (k of test) {
+                const cutWordCn = Object.entries(row).filter(([k, v]) => k.startsWith("criterion_number_")).map(([k, v]) => k)
+                for (k of cutWordCn) {
                     const field = k.endsWith("_type") ? k : `${k}_type`
                     /*
                         ดึงข้อมูล
@@ -245,13 +245,14 @@ exports.UpdateForm = async (req, res) => {
                     */
                     const t1 = await mraM.FetchOneContentOfMedicalRecordById(row.content_of_medical_record_id, field)
                     if (t1) {
-                        // สร้างตัวแปร v เพื่อเก็บค่าของ field (t1: value, field: key)
+                        // สร้างตัวแปร v เพื่อเก็บค่าของ field (t1: value อ้างอิงตาม field: key)
                         const v = t1[field]
                         if (v === false) {
                             ContentTypeErrorResult.push(
                                 `ไม่สามารถบันทึกข้อมูลได้เนื่องจาก เกณฑ์ข้อ: ${Object.keys(t1)[0].match(/\d+/)[0]} ของหัวข้อ: ` +
                                 `${t1.content_of_medical_record_name} ไม่ได้อนุญาตให้กรอกคะแนน`
                             )
+                            continue
                         }
                     }
                 }

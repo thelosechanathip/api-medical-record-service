@@ -92,19 +92,19 @@ exports.UpdateContentOfMedicalRecord = async (req, res) => {
 
         const comrd = req.body
 
-        if (!comrd.content_of_medical_record_name) return msg(res, 400, { message: 'กรุณากรอกชื่อประเภทข้อมูล' })
-        if (!comrd.patient_service_id) return msg(res, 400, { message: 'กรุณากรอกกลุ่มคนไข้' })
+        // if (!comrd.content_of_medical_record_name) return msg(res, 400, { message: 'กรุณากรอกชื่อประเภทข้อมูล' })
+        // if (!comrd.patient_service_id) return msg(res, 400, { message: 'กรุณากรอกกลุ่มคนไข้' })
 
-        const cpsi = await comrm.CheckPatientServiceId({ patient_service_id: comrd.patient_service_id })
-        if (!cpsi) return msg(res, 404, { message: 'ไม่มีข้อมูลคำระบุของกลุ่มคนไข้ที่เลือกมากรุณาตรวจสอบ!' })
+        // const cpsi = await comrm.CheckPatientServiceId({ patient_service_id: comrd.patient_service_id })
+        // if (!cpsi) return msg(res, 404, { message: 'ไม่มีข้อมูลคำระบุของกลุ่มคนไข้ที่เลือกมากรุณาตรวจสอบ!' })
 
-        const cu = await comrm.CheckUnique({
-            content_of_medical_record_name: comrd.content_of_medical_record_name,
-            patient_service_id: comrd.patient_service_id
-        })
-        if (cu) return msg(res, 409, {
-            message: `มีข้อมูล ${comrd.content_of_medical_record_name} ในกลุ่มคนไข้ ${cpsi.patient_service_name_english} อยู่แล้วไม่อนุญาตให้บันทึกข้อมูลซ้ำในกลุ่มคนไข้เดียวกัน!`
-        })
+        // const cu = await comrm.CheckUnique({
+        //     content_of_medical_record_name: comrd.content_of_medical_record_name,
+        //     patient_service_id: comrd.patient_service_id
+        // })
+        // if (cu) return msg(res, 409, {
+        //     message: `มีข้อมูล ${comrd.content_of_medical_record_name} ในกลุ่มคนไข้ ${cpsi.patient_service_name_english} อยู่แล้วไม่อนุญาตให้บันทึกข้อมูลซ้ำในกลุ่มคนไข้เดียวกัน!`
+        // })
 
         const cPriority = await comrm.CheckPriority({ patient_service_id: comrd.patient_service_id })
         if (cPriority) comrd.priority = cPriority.priority + 1
