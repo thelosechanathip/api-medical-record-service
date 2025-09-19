@@ -37,9 +37,7 @@ exports.FetchAllMedicalRecordAuditIPD = async (req, res) => {
                     }, 0)
                     totalDefaultSum += itemSum
 
-                    if (typeof content.total_score === 'number') {
-                        totalScoreSum += content.total_score
-                    }
+                    if (typeof content.total_score === 'number') totalScoreSum += content.total_score
                 }
             }
             data.totalDefaultSum = totalDefaultSum
