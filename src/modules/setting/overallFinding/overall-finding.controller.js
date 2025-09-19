@@ -106,10 +106,6 @@ exports.UpdateOverallFinding = async (req, res) => {
             message: `มีข้อมูล ${ofd.overall_finding_name} ในกลุ่มคนไข้ ${cpsi.patient_service_name_english} อยู่แล้วไม่อนุญาตให้บันทึกข้อมูลซ้ำในกลุ่มคนไข้เดียวกัน!`
         })
 
-        const cPriority = await ofm.CheckPriority({ patient_service_id: ofd.patient_service_id })
-        if (cPriority) ofd.priority = cPriority.priority + 1
-        else ofd.priority = 1
-
         ofd.updated_by = req.fullname
 
         const startTime = Date.now()

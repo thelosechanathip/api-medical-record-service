@@ -106,10 +106,6 @@ exports.UpdateReviewStatus = async (req, res) => {
             message: `มีข้อมูล ${rstd.review_status_name} ในกลุ่มคนไข้ ${cpsi.patient_service_name_english} อยู่แล้วไม่อนุญาตให้บันทึกข้อมูลซ้ำในกลุ่มคนไข้เดียวกัน!`
         })
 
-        const cPriority = await rstm.CheckPriority({ patient_service_id: rstd.patient_service_id })
-        if (cPriority) rstd.priority = cPriority.priority + 1
-        else rstd.priority = 1
-
         rstd.updated_by = req.fullname
 
         const startTime = Date.now()
