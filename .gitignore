@@ -1,7 +1,5 @@
-node_modules
-# Keep environment variables out of version control
+# ไม่เอาไฟล์ env (ห้ามหลุดขึ้น GitHub เดี๋ยวรหัสผ่านว่อนโลก)
 .env
 
-/src/generated/prisma
-
-/src/generated/prisma
+# ไม่เอาโฟลเดอร์ node_modules (มัน regenerate ได้จาก package.json)
+node_modules/
