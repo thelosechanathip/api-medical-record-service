@@ -39,8 +39,8 @@ exports.FetchOnePatientService = async () =>
     await pm.patient_services.findFirst({ select: { patient_service_id: true }, where: { patient_service_name_english: 'IPD' } })
 
 // ดึงข้อมูล patient_id จำนวน 1 record จากตาราง patients อ้างอิงจาก patient_an
-exports.FetchPatientInMra = async (key, value) =>
-    await pm.patients.findFirst({ where: { [key]: value }, select: { patient_id: true } })
+exports.FetchPatientInMra = async (patient_an) =>
+    await pm.patients.findFirst({ where: { patient_an: patient_an }, select: { patient_id: true } })
 
 // ดึงข้อมูล form_ipd_id จำนวน 1 record จากตาราง form_ipds อ้างอิงจาก patient_id
 exports.FetchOneFormIpdIdByPatientId = async (patient_id) =>

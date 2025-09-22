@@ -50,9 +50,9 @@ exports.CheckTokenUser = async (req, res, next) => {
         const cat = await am.CheckAuthToken(token)
         let CATError = false
         if (!cat) CATError = true
-        if (cat.otp_verified == false) CATError = true
-        if (cat.is_active == false) CATError = true
-        if (CATError == true) return msg(res, 401, { message: 'Tokenไม่อนุญาตให้ใช้งาน!' })
+        else if (cat.otp_verified === false) CATError = true
+        else if (cat.is_active === false) CATError = true
+        if (CATError === true) return msg(res, 401, { message: 'Tokenไม่อนุญาตให้ใช้งาน!' })
 
         const cr = await am.CheckRole(decoded.userId)
 

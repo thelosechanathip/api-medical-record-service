@@ -160,7 +160,7 @@ exports.GenerateForm = async (req, res) => {
         if (!mraD.patient_an) return msg(res, 400, { message: 'กรุณากรอก AN ที่ต้องการบันทึก!' })
 
         // ดึงข้อมูล patient_id จำนวน 1 record จากตาราง patients อ้างอิงจาก patient_an
-        const fPIM = await mraM.FetchPatientInMra({ patient_an: mraD.patient_an })
+        const fPIM = await mraM.FetchPatientInMra(mraD.patient_an)
         if (fPIM) {
             // ดึงข้อมูล form_ipd_id จำนวน 1 record จากตาราง form_ipds อ้างอิงจาก patient_id
             const formData = await mraM.FetchOneFormIpdIdByPatientId(fPIM.patient_id)

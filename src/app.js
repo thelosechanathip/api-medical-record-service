@@ -20,6 +20,7 @@ const spts = require('./modules/setting/patientService/patient-service.route')
 const srst = require('./modules/setting/reviewStatus/review-status.route')
 const scomr = require('./modules/setting/contentOfMedicalRecord/content-of-medical-record.route')
 const sof = require('./modules/setting/overallFinding/overall-finding.route')
+const hc = require('./modules/setting/hcode/hcode.route')
 
 // MRA
 const mraIpd = require('./modules/mraIpd/mra.route')
@@ -66,6 +67,7 @@ app.get('/ready', (_req, res) => res.status(200).send('ready'))
 //   router.post('/upload', express.json({ limit: '50mb' }), handler)
 
 app.use(`/${BASE_PATH}/auth`, auth)
+app.use(`/${BASE_PATH}/setting`, hc)
 app.use(`/${BASE_PATH}/setting`, spts)
 app.use(`/${BASE_PATH}/setting`, srst)
 app.use(`/${BASE_PATH}/setting`, scomr)
