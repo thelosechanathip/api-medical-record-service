@@ -4,6 +4,7 @@ const { ComparePassword } = require('../../services/bcrypt')
 const mraM = require('./mra.model') // mraM = mra model
 const moment = require('moment')
 
+// Fetch All
 exports.FetchAllMedicalRecordAuditIPD = async (req, res) => {
     try {
         const startTime = Date.now()
@@ -61,6 +62,7 @@ exports.FetchAllMedicalRecordAuditIPD = async (req, res) => {
     }
 }
 
+// Fetch One By An
 exports.FetchOneMedicalRecordAuditIPDByAn = async (req, res) => {
     try {
         const FAIP = await mraM.FetchAnInPatient(req.params.patient_an)
@@ -116,6 +118,7 @@ exports.FetchOneMedicalRecordAuditIPDByAn = async (req, res) => {
     }
 }
 
+// Fetch One Patient
 exports.FetchOnePatientData = async (req, res) => {
     try {
         const FPIH = await mraM.FetchPatientInHos(req.params.patient_an)
@@ -432,7 +435,7 @@ exports.UpdateForm = async (req, res) => {
 
                         // ดึงข้อมูล form_ipd_id จำนวน 1 record จากตาราง form_ipd_review_status_results อ้างอิงจาก form_ipd_id
                         const cuFiRsr = await mraM.CheckUniqueFormIpdReviewStatusResult(fOFIIBPI.form_ipd_id)
-                        if (cuFiRsr) return msg(res, 409, { message: 'มีข้อมูลอยู่ในระบบแล้ว ไม่สามารถมีข้อมูลซ้ำได้' })
+                        if (cuFiRsr) return msg(res, 409, { message: 'มีข้อมูลอยู่ในระบบแล้ว ไม่สามารถมีข้อมูลซ้ำได้!' })
 
                         const FIRSRPayload = {
                             form_ipd_id: fOFIIBPI.form_ipd_id,
