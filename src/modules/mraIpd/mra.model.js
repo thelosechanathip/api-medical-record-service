@@ -107,7 +107,8 @@ exports.FetchAllMedicalRecordAuditIPD = async () => {
                     }
                 }
             }
-        }
+        },
+        orderBy: { content_of_medical_records: { priority: 'asc' } }
     })
 }
 
