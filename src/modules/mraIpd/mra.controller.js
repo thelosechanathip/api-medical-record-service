@@ -290,7 +290,7 @@ exports.UpdateForm = async (req, res) => {
             // }
 
             let ContentErrorResult = []
-            let ContentTypeErrorResult = []
+            // let ContentTypeErrorResult = []
             for (row of content) {
                 /*
                     ดึงข้อมูล 1 record จากตาราง form_ipd_content_of_medical_record_results
@@ -307,34 +307,34 @@ exports.UpdateForm = async (req, res) => {
                     continue
                 }
 
-                // ค้นหา Key ของ Object ที่คำนำหน้าว่า: criterion_number_
-                const cutWordCn = Object.entries(row).filter(([k, v]) => k.startsWith("criterion_number_")).map(([k, v]) => k)
-                for (k of cutWordCn) {
-                    const field = k.endsWith("_type") ? k : `${k}_type`
-                    /*
-                        ดึงข้อมูล
-                            content_of_medical_record_name, criterion_number_1-9_type
-                        จากตาราง
-                            content_of_medical_records
-                        อ้างอิงจาก
-                            content_of_medical_record_id
-                    */
-                    const t1 = await mraM.FetchOneContentOfMedicalRecordById(row.content_of_medical_record_id, field)
-                    if (t1) {
-                        // สร้างตัวแปร v เพื่อเก็บค่าของ field (t1: value อ้างอิงตาม field: key)
-                        const v = t1[field]
-                        if (v === false) {
-                            ContentTypeErrorResult.push(
-                                `ไม่สามารถบันทึกข้อมูลได้เนื่องจาก เกณฑ์ข้อ: ${Object.keys(t1)[0].match(/\d+/)[0]} ของหัวข้อ: ` +
-                                `${t1.content_of_medical_record_name} ไม่ได้อนุญาตให้กรอกคะแนน`
-                            )
-                            continue
-                        }
-                    }
-                }
+                // // ค้นหา Key ของ Object ที่คำนำหน้าว่า: criterion_number_
+                // const cutWordCn = Object.entries(row).filter(([k, v]) => k.startsWith("criterion_number_")).map(([k, v]) => k)
+                // for (k of cutWordCn) {
+                //     const field = k.endsWith("_type") ? k : `${k}_type`
+                //     /*
+                //         ดึงข้อมูล
+                //             content_of_medical_record_name, criterion_number_1-9_type
+                //         จากตาราง
+                //             content_of_medical_records
+                //         อ้างอิงจาก
+                //             content_of_medical_record_id
+                //     */
+                //     const t1 = await mraM.FetchOneContentOfMedicalRecordById(row.content_of_medical_record_id, field)
+                //     if (t1) {
+                //         // สร้างตัวแปร v เพื่อเก็บค่าของ field (t1: value อ้างอิงตาม field: key)
+                //         const v = t1[field]
+                //         if (v === false) {
+                //             ContentTypeErrorResult.push(
+                //                 `ไม่สามารถบันทึกข้อมูลได้เนื่องจาก เกณฑ์ข้อ: ${Object.keys(t1)[0].match(/\d+/)[0]} ของหัวข้อ: ` +
+                //                 `${t1.content_of_medical_record_name} ไม่ได้อนุญาตให้กรอกคะแนน`
+                //             )
+                //             continue
+                //         }
+                //     }
+                // }
             }
-
-            if (ContentTypeErrorResult.length > 0) return msg(res, 400, { message: ContentTypeErrorResult.join(" AND ") })
+            
+            // if (ContentTypeErrorResult.length > 0) return msg(res, 400, { message: ContentTypeErrorResult.join(" AND ") })
 
             if (ContentErrorResult.length > 0) return msg(res, 404, { message: ContentErrorResult.join(" AND ") }) // ถ้าไม่พอข้อมูลในระบบ MRA IPD จะ return 404
 
