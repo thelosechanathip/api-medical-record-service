@@ -156,10 +156,8 @@ exports.FetchOneMedicalRecordAuditIPD = async (patient_id) => {
             }
         },
         orderBy: {
-            form_ipd_content_of_medical_record_results: {
-                content_of_medical_records: {
-                    priority: 'asc'
-                }
+            content_of_medical_records: {
+                priority: 'asc'
             }
         }
     })
