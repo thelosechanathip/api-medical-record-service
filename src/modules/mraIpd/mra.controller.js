@@ -62,6 +62,26 @@ exports.FetchAllMedicalRecordAuditIPD = async (req, res) => {
     }
 }
 
+exports.FetchOneReviewStatusByPatientServiceId = async (req, res) => {
+    try {
+        const ps = await mraM.FetchOnePatientService()
+
+        const startTime = Date.now()
+        const FoRsBPsi = await mraM.FetchOneReviewStatusByPatientServiceId(ps.patient_service_id)
+        if (!FoRsBPsi) return msg(res, 404, { message: 'Data not found!' })
+        const endTime = Date.now() - startTime
+
+        // Set and Insert Log
+        const sl = setLog(req, req.fullname, endTime, FoRsBPsi)
+        await mraM.InsertLog(sl)
+
+        return msg(res, 200, { data: FoRsBPsi })
+    } catch (err) {
+        console.log('FetchOneReviewStatusByPatientServiceId : ', err)
+        return msg(res, 500, { message: err.message })
+    }
+}
+
 // Fetch One By An
 exports.FetchOneMedicalRecordAuditIPDByAn = async (req, res) => {
     try {
@@ -333,7 +353,7 @@ exports.UpdateForm = async (req, res) => {
                 //     }
                 // }
             }
-            
+
             // if (ContentTypeErrorResult.length > 0) return msg(res, 400, { message: ContentTypeErrorResult.join(" AND ") })
 
             if (ContentErrorResult.length > 0) return msg(res, 404, { message: ContentErrorResult.join(" AND ") }) // ถ้าไม่พอข้อมูลในระบบ MRA IPD จะ return 404

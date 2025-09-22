@@ -277,6 +277,9 @@ exports.CheckUniqueFormIpdReviewStatusResult = async (form_ipd_id) =>
 // ดึงข้อมูล 1 record จากตาราง content_of_medical_records อ้างอิงจาก content_of_medical_record_id
 exports.FetchTypeContentOfMedicalRecordById = async (content_of_medical_record_id) =>
     await pm.content_of_medical_records.findFirst({ where: { content_of_medical_record_id: content_of_medical_record_id } })
+
+exports.FetchOneReviewStatusByPatientServiceId = async (patient_service_id) =>
+    await pm.review_status.findMany({ where: { patient_service_id: patient_service_id } })
 // Fetch End #################################################################################################################################
 
 // Insert Start #################################################################################################################################
