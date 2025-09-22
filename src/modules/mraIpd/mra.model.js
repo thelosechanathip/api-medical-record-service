@@ -107,13 +107,6 @@ exports.FetchAllMedicalRecordAuditIPD = async () => {
                     }
                 }
             }
-        },
-        orderBy: {
-            form_ipd_content_of_medical_record_results: {
-                content_of_medical_records: {
-                    priority: 'asc'
-                }
-            }
         }
     })
 }
@@ -159,6 +152,13 @@ exports.FetchOneMedicalRecordAuditIPD = async (patient_id) => {
                 include: {
                     review_status_id: false,
                     review_status: {}
+                }
+            }
+        },
+        orderBy: {
+            form_ipd_content_of_medical_record_results: {
+                content_of_medical_records: {
+                    priority: 'asc'
                 }
             }
         }
