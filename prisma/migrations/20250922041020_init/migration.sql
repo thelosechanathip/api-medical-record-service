@@ -51,6 +51,8 @@ CREATE TABLE `hcodes` (
     `hcode_name` VARCHAR(191) NOT NULL,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `created_by` VARCHAR(191) NULL DEFAULT 'admin',
+    `updated_at` DATETIME(3) NOT NULL,
+    `updated_by` VARCHAR(191) NULL DEFAULT 'admin',
 
     UNIQUE INDEX `hcodes_hcode_key`(`hcode`),
     UNIQUE INDEX `hcodes_hcode_name_key`(`hcode_name`),

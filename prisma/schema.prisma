@@ -56,20 +56,22 @@ model hcodes {
   hcode_name String     @unique // ชื่อสถานพยาบาล
   created_at DateTime   @default(now()) // วัน-เวลาที่บันทึก
   created_by String?    @default("admin") // ชื่อผู้บันทึก
+  updated_at DateTime   @updatedAt // วัน-เวลาที่อัพเดท
+  updated_by String?    @default("admin") // ชื่อผู้อัพเดท
   patients   patients[]
 }
 
 // Log การทำงานของ hcodes
 model hcode_logs {
-  hcode_log_id String   @id @default(uuid())
-  ip_address             String // ip_address ของผู้ใช้งาน
-  name                   String // ชื่อผู้ใช้งาน
-  request_method         String // method ที่ผู้ใช้งานใช้
-  endpoint               String // path api ที่ผู้ใช้งานใช้
-  execution_time         Int // เวลาในการ Query
-  row_count              Int? // จำนวนข้อมูลทั้งหมด
-  status                 String // สถานะการทำงาน
-  created_at             DateTime @default(now()) // วัน-เวลาที่บันทึก
+  hcode_log_id   String   @id @default(uuid())
+  ip_address     String // ip_address ของผู้ใช้งาน
+  name           String // ชื่อผู้ใช้งาน
+  request_method String // method ที่ผู้ใช้งานใช้
+  endpoint       String // path api ที่ผู้ใช้งานใช้
+  execution_time Int // เวลาในการ Query
+  row_count      Int? // จำนวนข้อมูลทั้งหมด
+  status         String // สถานะการทำงาน
+  created_at     DateTime @default(now()) // วัน-เวลาที่บันทึก
 
   @@index([created_at])
   @@index([endpoint])
