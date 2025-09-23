@@ -89,7 +89,7 @@ exports.FetchOneMedicalRecordAuditIPDByAn = async (req, res) => {
         if (!FAIP) return msg(res, 404, { message: `${req.params.patient_an}นี้ไม่มีข้อมูลอยู่ในระบบ!` })
 
         const startTime = Date.now()
-        const FoMraIpd = await mraM.FetchOneMedicalRecordAuditIPD(FAIP.form_ipd_id)
+        const FoMraIpd = await mraM.FetchOneMedicalRecordAuditIPD(FAIP.patient_id)
         if (!FoMraIpd) return msg(res, 404, { message: 'Data not found!' })
 
         const resultsWithDefaultSum = []
