@@ -279,7 +279,7 @@ exports.FetchTypeContentOfMedicalRecordById = async (content_of_medical_record_i
     await pm.content_of_medical_records.findFirst({ where: { content_of_medical_record_id: content_of_medical_record_id } })
 
 exports.FetchOneReviewStatusByPatientServiceId = async (patient_service_id) =>
-    await pm.review_status.findMany({ where: { patient_service_id: patient_service_id } })
+    await pm.review_status.findMany({ where: { patient_service_id: patient_service_id }, orderBy: { priority: 'asc' } })
 // Fetch End #################################################################################################################################
 
 // Insert Start #################################################################################################################################
