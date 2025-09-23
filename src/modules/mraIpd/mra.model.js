@@ -119,7 +119,7 @@ exports.FetchAllMedicalRecordAuditIPD = async () => {
         patient_id
 */
 exports.FetchOneMedicalRecordAuditIPD = async (patient_id) => {
-    return await pm.form_ipds.findFirst({
+    return await pm.form_ipds.findMany({
         where: {
             patient_id: patient_id
         },
