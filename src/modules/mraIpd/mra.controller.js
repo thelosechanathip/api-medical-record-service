@@ -186,7 +186,7 @@ exports.GenerateForm = async (req, res) => {
             const formData = await mraM.FetchOneFormIpdIdByPatientId(fPIM.patient_id)
 
             // ดึงข้อมูล review_status_id จำนวน 1 record จากตาราง form_ipd_review_status_results อ้างอิงจาก form_ipd_id
-            const formIRSR = await mraM.FetchFormIRSRInMra(formData.patient_id)
+            const formIRSR = await mraM.FetchFormIRSRInMra(formData.form_ipd_id)
             if (formIRSR) {
                 return msg(res, 409, { message: `ได้มีข้อมูลของ ${mraD.patient_an} อยู่ในระบบแล้ว ไม่อนุญาติให้บันทึกข้อมูลซ้ำ!` })
             } else if (formIRSR === null || formIRSR === '') {
