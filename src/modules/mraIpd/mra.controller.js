@@ -491,8 +491,12 @@ exports.RemoveData = async (req, res) => {
         const password = req.body.password
         if (!password) return msg(res, 400, { message: 'กรุณากรอกรหัสผ่านเพื่อยืนยันการลบข้อมูล!' })
 
+        const prefixPattern = /^(นาย|นางสาว|นาง|นส.|น\.ส\.|ด\.ช\.|ด\.ญ\.|คุณ|พญ\.)\s*/
+        const fullname = req.fullname
+        const cleanedName = fullname.replace(prefixPattern, '').trim()
+
         // ดึงข้อมูล password จำนวน 1 record มาจากระบบ Backoffice อ้างอิงจาก fullname
-        const fpib = await mraM.FetchPasswordInBackoffice(req.fullname)
+        const fpib = await mraM.FetchPasswordInBackoffice(cleanedName)
         const cp = await ComparePassword(password, fpib.password)
         if (!cp) return msg(res, 400, { message: "รหัสผ่านไม่ถูกต้อง!" })
 
