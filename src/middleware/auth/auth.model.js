@@ -14,7 +14,17 @@ exports.CheckAuthToken = async (token) => {
 
 exports.CheckRole = async (userId) => {
     const [rows] = await db_b.query(
-        "SELECT status, name as fullname FROM users WHERE id = ?", [userId]
+        `
+            SELECT
+                u.STATUS,
+                CONCAT(hpf.HR_PREFIX_NAME, u.NAME) AS fullname
+            FROM
+                users AS u
+                LEFT OUTER JOIN hrd_person hps ON u.PERSON_ID = hps.ID
+                LEFT OUTER JOIN hrd_prefix hpf ON hps.HR_PREFIX_ID = hpf.HR_PREFIX_ID
+            WHERE
+                u.id = ?
+        `, [userId]
     )
     return pickFirst(rows)
 }

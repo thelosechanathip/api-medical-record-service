@@ -50,11 +50,13 @@ exports.FetchUserByUserId = async (userId) => {
     const [rows] = await db_b.query(
         `
             SELECT
-                u.name AS fullname,
-                u.status,
+                u.STATUS,
+                CONCAT(hpf.HR_PREFIX_NAME, u.NAME) AS fullname,
                 u.email
             FROM
                 users AS u
+                LEFT OUTER JOIN hrd_person hps ON u.PERSON_ID = hps.ID
+                LEFT OUTER JOIN hrd_prefix hpf ON hps.HR_PREFIX_ID = hpf.HR_PREFIX_ID
             WHERE
                 u.id = ?
         `, [userId]
