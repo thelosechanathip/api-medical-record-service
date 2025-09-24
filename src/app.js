@@ -12,6 +12,9 @@ const dotenvExpand = require('dotenv-expand')
 dotenvExpand.expand(dotenv.config())
 
 // All Routes
+// Dashboard
+const dashboard = require('./modules/dashboard/dashboard.route')
+
 // Auth
 const auth = require('./modules/auth/auth.route')
 
@@ -72,6 +75,7 @@ app.use(`/${BASE_PATH}/setting`, spts)
 app.use(`/${BASE_PATH}/setting`, srst)
 app.use(`/${BASE_PATH}/setting`, scomr)
 app.use(`/${BASE_PATH}/setting`, sof)
+app.use(`/${BASE_PATH}`, dashboard)
 app.use(`/${BASE_PATH}`, mraIpd)
 
 // 404 NOT FOUND — ตอบให้ไว
