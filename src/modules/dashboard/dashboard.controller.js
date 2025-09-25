@@ -30,7 +30,14 @@ exports.FetchAllAn = async (req, res) => {
         const FABW = await dbM.FetchAnByWard(ward)
         if (!FABW) return msg(res, 404, { message: 'Data not found!' })
 
-        return msg(res, 200, { data: FABW })
+        const FABWR = await Promise.all(
+            FABW.map(async (i) => {
+                const FFiBPi = await dbM.FetchFormIpdByPatientId(i.patient_id)
+                return { ...i, form_ipd: FFiBPi }
+            })
+        )
+
+        return msg(res, 200, { data: FABWR })
     } catch (err) {
         console.log('FetchAnByWard : ', err)
         return msg(res, 500, { message: err.message })

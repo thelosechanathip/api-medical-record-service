@@ -36,4 +36,7 @@ exports.CountDistinctFormIpdByService = async () => {
 }
 
 exports.FetchAnByWard = async (ward) =>
-    await pm.patients.findMany({ where: { patient_ward: ward, patient_an: { not: null } }, select: { patient_an: true } })
+    await pm.patients.findMany({ where: { patient_ward: ward, patient_an: { not: null } }, select: { patient_an: true, patient_id: true } })
+
+exports.FetchFormIpdByPatientId = async (patient_id) =>
+    await pm.form_ipds.findFirst({ where: { patient_id: patient_id } })
