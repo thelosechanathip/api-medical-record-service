@@ -3,7 +3,7 @@ const router = express.Router()
 const m = require('../../middleware/auth/auth.controller') // m = middleware
 const mraC = require('./mra.controller') // mraC = mra controller
 
-router.get('/mraIpd', m.CheckTokenUser, mraC.FetchAllMedicalRecordAuditIPD)
+// router.get('/mraIpd', m.CheckTokenUser, mraC.FetchAllMedicalRecordAuditIPD)
 router.get('/mraIpd/rvst', m.CheckTokenUser, mraC.FetchOneReviewStatusByPatientServiceId)
 router.get('/mraIpd/:patient_an', m.CheckTokenUser, mraC.FetchOneMedicalRecordAuditIPDByAn)
 router.get('/mraIpd/fetchPatient/:patient_an', m.CheckTokenUser, mraC.FetchOnePatientData)

@@ -93,8 +93,8 @@ exports.UpdateContentOfMedicalRecord = async (req, res) => {
         const comrd = req.body
 
         let cpError = false
-        for (const [k, v] of Object.entries(comrd)) if (k == 'content_of_medical_record_name' || k == 'patient_service_id') cpError = true
-        if (cpError == true) return msg(res, 400, { message: 'ไม่อนุญาติให้แก้ไขชื่อเนื้อหาของเวชระเบียนหรือกลุ่มคนไข้ เพื่อป้องกันข้อมูลทับซ้อน!' })
+        for (const [k, v] of Object.entries(comrd)) if (k == 'patient_service_id') cpError = true
+        if (cpError == true) return msg(res, 400, { message: 'ไม่อนุญาติให้แก้ไขกลุ่มคนไข้ เพื่อป้องกันข้อมูลทับซ้อน!' })
 
         comrd.updated_by = req.fullname
 

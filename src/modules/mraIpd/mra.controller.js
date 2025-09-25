@@ -5,62 +5,62 @@ const mraM = require('./mra.model') // mraM = mra model
 const moment = require('moment')
 
 // Fetch All
-exports.FetchAllMedicalRecordAuditIPD = async (req, res) => {
-    try {
-        const startTime = Date.now()
+// exports.FetchAllMedicalRecordAuditIPD = async (req, res) => {
+//     try {
+//         const startTime = Date.now()
 
-        /*
-            ดึงข้อมูลทั้งหมดของตาราง form_ipds
-            join
-                patients, form_ipd_content_of_medical_record_results, form_ipd_overall_finding_results, form_ipd_review_status_results
-        */
-        const faMraIpd = await mraM.FetchAllMedicalRecordAuditIPD()
-        if (faMraIpd.length === 0) return msg(res, 404, { message: 'Data not found!' })
+//         /*
+//             ดึงข้อมูลทั้งหมดของตาราง form_ipds
+//             join
+//                 patients, form_ipd_content_of_medical_record_results, form_ipd_overall_finding_results, form_ipd_review_status_results
+//         */
+//         const faMraIpd = await mraM.FetchAllMedicalRecordAuditIPD()
+//         if (faMraIpd.length === 0) return msg(res, 404, { message: 'Data not found!' })
 
-        const resultsWithDefaultSum = []
+//         const resultsWithDefaultSum = []
 
-        for (const data of faMraIpd) {
-            let totalDefaultSum = 0
-            let totalScoreSum = 0
-            for (const content of data.form_ipd_content_of_medical_record_results) {
-                if (content.na === false && content.missing === false && content.no === false) {
-                    const comrId = content.content_of_medical_records.content_of_medical_record_id
+//         for (const data of faMraIpd) {
+//             let totalDefaultSum = 0
+//             let totalScoreSum = 0
+//             for (const content of data.form_ipd_content_of_medical_record_results) {
+//                 if (content.na === false && content.missing === false && content.no === false) {
+//                     const comrId = content.content_of_medical_records.content_of_medical_record_id
 
-                    // ดึงข้อมูล 1 record จากตาราง content_of_medical_records อ้างอิงจาก content_of_medical_record_id
-                    const checkType = await mraM.FetchTypeContentOfMedicalRecordById(comrId)
-                    const comrKeys = Object.keys(checkType).filter(k => k.startsWith("criterion_number_"))
-                    const itemSum = comrKeys.reduce((acc, key) => {
-                        const value = checkType[key]
-                        if (value === true) {
-                            return acc + 1
-                        }
-                        return acc
-                    }, 0)
-                    totalDefaultSum += itemSum
+//                     // ดึงข้อมูล 1 record จากตาราง content_of_medical_records อ้างอิงจาก content_of_medical_record_id
+//                     const checkType = await mraM.FetchTypeContentOfMedicalRecordById(comrId)
+//                     const comrKeys = Object.keys(checkType).filter(k => k.startsWith("criterion_number_"))
+//                     const itemSum = comrKeys.reduce((acc, key) => {
+//                         const value = checkType[key]
+//                         if (value === true) {
+//                             return acc + 1
+//                         }
+//                         return acc
+//                     }, 0)
+//                     totalDefaultSum += itemSum
 
-                    if (typeof content.total_score === 'number') totalScoreSum += content.total_score
-                }
-            }
-            data.totalDefaultSum = totalDefaultSum
-            data.totalScoreSum = totalScoreSum
-            const resultSum = (totalScoreSum / totalDefaultSum) * 100
-            const formattedResultSum = resultSum.toFixed(2)
-            data.formattedResultSum = parseFloat(formattedResultSum)
-            resultsWithDefaultSum.push(data)
-        }
+//                     if (typeof content.total_score === 'number') totalScoreSum += content.total_score
+//                 }
+//             }
+//             data.totalDefaultSum = totalDefaultSum
+//             data.totalScoreSum = totalScoreSum
+//             const resultSum = (totalScoreSum / totalDefaultSum) * 100
+//             const formattedResultSum = resultSum.toFixed(2)
+//             data.formattedResultSum = parseFloat(formattedResultSum)
+//             resultsWithDefaultSum.push(data)
+//         }
 
-        const endTime = Date.now() - startTime
+//         const endTime = Date.now() - startTime
 
-        // Set and Insert Log
-        const sl = setLog(req, req.fullname, endTime, faMraIpd)
-        await mraM.InsertLog(sl)
+//         // Set and Insert Log
+//         const sl = setLog(req, req.fullname, endTime, faMraIpd)
+//         await mraM.InsertLog(sl)
 
-        return msg(res, 200, { data: faMraIpd })
-    } catch (err) {
-        console.log('FetchAllMedicalRecordAuditIPD : ', err)
-        return msg(res, 500, { message: err.message })
-    }
-}
+//         return msg(res, 200, { data: faMraIpd })
+//     } catch (err) {
+//         console.log('FetchAllMedicalRecordAuditIPD : ', err)
+//         return msg(res, 500, { message: err.message })
+//     }
+// }
 
 exports.FetchOneReviewStatusByPatientServiceId = async (req, res) => {
     try {
