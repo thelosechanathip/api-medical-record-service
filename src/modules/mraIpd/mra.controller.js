@@ -244,7 +244,8 @@ exports.GenerateForm = async (req, res) => {
                         form_ipd_overall_finding_results,
                         form_ipd_review_status_results อ้างอิงจาก patient_id
                 */
-                const result = await mraM.FetchOneMedicalRecordAuditIPD(fPIM.patient_id)
+                // const result = await mraM.FetchOneMedicalRecordAuditIPD(fPIM.patient_id)
+                const result = await mraM.FetchOnePdfByFormIpdId(formData.form_ipd_id)
                 return msg(res, 200, { data: result })
             }
         }
