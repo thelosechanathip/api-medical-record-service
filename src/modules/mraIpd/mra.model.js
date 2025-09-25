@@ -301,6 +301,9 @@ exports.FetchOnePdfByFormIpdId = async (form_ipd_id) =>
             form_ipd_id: false,
             file_name: false,
             mime_type: false,
+            created_at: false,
+            created_by: false,
+            pdf_id: false,
             form_ipds: {
                 include: {
                     patients: {
