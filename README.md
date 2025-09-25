@@ -25,6 +25,7 @@ npx prisma generate
 ### 5. Set ข้อมูลเบื้องต้น
 แก้ไขข้อมูลให้ตรงกับที่โรงพยาบาลใช้งานใน PATH: prisma/seed.js แล้ว RUN คำสั่งด้านล่างเพื่อบันทึกข้อมูลเบื้องต้น
 ```
+npx prisma db push
 npx prisma db seed
 ```
 
