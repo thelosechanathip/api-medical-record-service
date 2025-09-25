@@ -293,7 +293,7 @@ exports.FetchAnByFormIpdId = async (form_ipd_id) =>
     })
 
 exports.FetchOnePdfByFormIpdId = async (form_ipd_id) =>
-    await pm.pdf.findFirst({ where: { form_ipd_id: form_ipd_id }, select: { pdf_id: true } })
+    await pm.pdf.findFirst({ where: { form_ipd_id: form_ipd_id } })
 // Fetch End #################################################################################################################################
 
 // Insert Start #################################################################################################################################

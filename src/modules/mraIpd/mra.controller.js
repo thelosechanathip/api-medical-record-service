@@ -158,6 +158,25 @@ exports.FetchOnePatientData = async (req, res) => {
     }
 }
 
+exports.FetchOnePdfByAn = async (req, res) => {
+    try {
+        const { patient_an } = req.params
+
+        const FAIP = await mraM.FetchAnInPatient(patient_an)
+        if (!FAIP) return msg(res, 404, { message: `${patient_an} นี้ไม่มีข้อมูลอยู่ในระบบ!` })
+
+        const FPiIFi = await mraM.FetchPatientIdInFormIpd(FAIP.patient_id)
+        if (!FPiIFi) return msg(res, 404, { message: 'Data not found!' })
+
+        const FoPBFii = await mraM.FetchOnePdfByFormIpdId(FPiIFi.form_ipd_id)
+
+        return msg(res, 200, { data: FoPBFii })
+    } catch (err) {
+        console.log('FetchOnePdfByAn : ', err)
+        return msg(res, 500, { message: err.message })
+    }
+}
+
 // Insert PDF
 exports.InsertPdf = async (req, res) => {
     try {

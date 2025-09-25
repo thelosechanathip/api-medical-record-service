@@ -7,6 +7,7 @@ const mraC = require('./mra.controller') // mraC = mra controller
 router.get('/mraIpd/rvst', m.CheckTokenUser, mraC.FetchOneReviewStatusByPatientServiceId)
 router.get('/mraIpd/:patient_an', m.CheckTokenUser, mraC.FetchOneMedicalRecordAuditIPDByAn)
 router.get('/mraIpd/fetchPatient/:patient_an', m.CheckTokenUser, mraC.FetchOnePatientData)
+router.get('/mraIpd/fetchPdf/:patient_an', m.CheckTokenUser, mraC.FetchOnePdfByAn)
 router.post('/mraIpd/insertPdf', m.CheckTokenUser, mraC.InsertPdf)
 router.post('/mraIpd', m.CheckTokenUser, mraC.GenerateForm)
 router.put('/mraIpd/:patient_an', m.CheckTokenUser, mraC.UpdateForm)
