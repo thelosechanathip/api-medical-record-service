@@ -2,6 +2,9 @@ const pm = require('../../libs/prisma')
 
 exports.CountAll = async () => await pm.form_ipds.count()
 
+exports.CountAllPercentageNotNull = async () => await pm.form_ipds.count({ where: { percentage: { not: null } } })
+exports.CountAllPercentageNull = async () => await pm.form_ipds.count({ where: { percentage: null } })
+
 exports.CountFormIpdByWard = async () => {
     const rows = await pm.$queryRaw`
         SELECT 

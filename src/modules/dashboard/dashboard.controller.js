@@ -6,6 +6,14 @@ exports.FetchMraIpdCount = async (_, res) => {
         const CA = await dbM.CountAll()
         if (!CA) return msg(res, 404, { message: 'Data not found!' })
 
+        const CaPctNn = await dbM.CountAllPercentageNotNull()
+        if (!CaPctNn) return msg(res, 404, { message: 'Data not found!' })
+
+        const CaPctN = await dbM.CountAllPercentageNull()
+        if (!CaPctN) return msg(res, 404, { message: 'Data not found!' })
+
+        console.log(CaPctN)
+
         const CFiBW = await dbM.CountFormIpdByWard()
         if (!CFiBW) return msg(res, 404, { message: 'Data not found!' })
 
@@ -14,6 +22,8 @@ exports.FetchMraIpdCount = async (_, res) => {
 
         return msg(res, 200, {
             countAll: CA,
+            countAllPercentageNotNull: CaPctNn,
+            countAllPercentageNull: CaPctN,
             countWard: CFiBW,
             countPatientService: CDtFiBS
         })
