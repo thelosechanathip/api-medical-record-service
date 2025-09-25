@@ -295,7 +295,27 @@ exports.FetchAnByFormIpdId = async (form_ipd_id) =>
     })
 
 exports.FetchOnePdfByFormIpdId = async (form_ipd_id) =>
-    await pm.pdf.findFirst({ where: { form_ipd_id: form_ipd_id } })
+    await pm.pdf.findFirst({
+        where: { form_ipd_id: form_ipd_id },
+        include: {
+            form_ipd_id: false,
+            file_name: false,
+            mime_type: false,
+            form_ipds: {
+                include: {
+                    patients: {
+                        select: {
+                            patient_fullname: true,
+                            patient_hn: true,
+                            patient_date_admitted: true,
+                            patient_date_discharged: true,
+                            patient_ward: true
+                        }
+                    }
+                }
+            }
+        }
+    })
 // Fetch End #################################################################################################################################
 
 // Insert Start #################################################################################################################################

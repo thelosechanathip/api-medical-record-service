@@ -95,8 +95,8 @@ exports.FetchOneMedicalRecordAuditIPDByAn = async (req, res) => {
 
         const FoPBFii = await mraM.FetchOnePdfByFormIpdId(FoMraIpd[0].form_ipd_id)
         if (FoPBFii) {
-            const result= Buffer.from(FoPBFii.pdf_file).toString('base64')
-            return msg(res, 409, { data: result })
+            FoPBFii.pdf_file = Buffer.from(FoPBFii.pdf_file).toString('base64')
+            return msg(res, 409, { data: FoPBFii })
         }
 
         const resultsWithDefaultSum = []
