@@ -238,6 +238,9 @@ model form_ipds {
   form_ipd_id                                String                                       @id @default(uuid())
   patients                                   patients                                     @relation(fields: [patient_id], references: [patient_id], onDelete: Restrict)
   patient_id                                 String // Foreign Key ของตาราง Patients( ข้อมูลคนไข้ )
+  total_score                                Int? // เก็บค่าคะแนนรวม
+  score_obtained                             Int? // เก็บค่าคะแนนที่ได้
+  percentage                                 Float? // เก็บค่าร้อยละของข้อมูล
   created_at                                 DateTime                                     @default(now()) // วัน-เวลาที่บันทึก
   created_by                                 String?                                      @default("admin") // ชื่อผู้บันทึก
   updated_at                                 DateTime                                     @updatedAt // วัน-เวลาที่อัพเดท

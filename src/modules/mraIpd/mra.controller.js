@@ -189,7 +189,7 @@ exports.FetchOnePatientData = async (req, res) => {
 
 exports.InsertPdf = async (req, res) => {
     try {
-        const { binary, ...data } = req.body
+        const { binary, total_score, score_obtained, percentage, ...data } = req.body
 
         const FaBFii = await mraM.FetchAnByFormIpdId(data.form_ipd_id)
         if (!FaBFii) return msg(res, 404, { message: 'Data not found!' })
@@ -206,6 +206,12 @@ exports.InsertPdf = async (req, res) => {
         data.created_by = req.fullname
 
         const IP = await mraM.InsertPdf(data)
+        if (IP) {
+            const setDataUpdateForm = {
+                total_score, score_obtained, percentage
+            }
+            await mraM.UpdateFormIpd(data.form_ipd_id, setDataUpdateForm)
+        }
 
         return msg(res, 200, { message: "Generate PDF Successfully!" })
     } catch (err) {
@@ -463,64 +469,66 @@ exports.UpdateForm = async (req, res) => {
 
             if (updatePromissFICOMR) {
                 const { overall } = data
-                let OverallErrorResult = []
-                for (i of overall) {
-                    /*
-                        ดึงข้อมูล 1 record จากตาราง form_ipd_overall_finding_results
-                        อ้างอิงจาก
-                            form_ipd_overall_finding_result_id, overall_finding_id
-                    */
-                    const result = await mraM.FetchOneFormIpdOverallFindingResult(
-                        i.form_ipd_overall_finding_result_id, i.overall_finding_id
-                    )
-                    if (!result) OverallErrorResult.push(
-                        `ไม่พอข้อมูล ${i.form_ipd_overall_finding_result_id} หรือ ${i.overall_finding_id} นี่ในระบบ MRA IPD`
-                    )
-                }
-
-                if (OverallErrorResult.length > 0) return msg(res, 404, { message: OverallErrorResult.join(" AND ") })
-
-                const rFIOF = overall.map(item => {
-                    return {
-                        ...item,
-                        ...fullnamePayload
+                if (overall) {
+                    let OverallErrorResult = []
+                    for (i of overall) {
+                        /*
+                            ดึงข้อมูล 1 record จากตาราง form_ipd_overall_finding_results
+                            อ้างอิงจาก
+                                form_ipd_overall_finding_result_id, overall_finding_id
+                        */
+                        const result = await mraM.FetchOneFormIpdOverallFindingResult(
+                            i.form_ipd_overall_finding_result_id, i.overall_finding_id
+                        )
+                        if (!result) OverallErrorResult.push(
+                            `ไม่พอข้อมูล ${i.form_ipd_overall_finding_result_id} หรือ ${i.overall_finding_id} นี่ในระบบ MRA IPD`
+                        )
                     }
-                })
 
-                /*
-                    อัพเดทข้อมูลไปยังตาราง form_ipd_overall_finding_results
-                    อ้างอิงจาก
-                        form_ipd_id, overall_finding_id, form_ipd_overall_finding_result_id
-                */
-                const updatePromissesFIOF = rFIOF.map(i =>
-                    mraM.UpdateFormIpdOverallFindingResult(i, fOFIIBPI.form_ipd_id)
-                )
-                await Promise.all(updatePromissesFIOF)
+                    if (OverallErrorResult.length > 0) return msg(res, 404, { message: OverallErrorResult.join(" AND ") })
 
-                if (updatePromissesFIOF) {
-                    const { content, overall, ...rsD } = data
-                    if (Object.keys(rsD).length > 0) {
-                        fullnamePayload.created_by = req.fullname
-
-                        // ดึงข้อมูล review_status_type จำนวน 1 record จากตาราง review_status อ้างอิงจาก review_status_id
-                        const foRstORs = await mraM.FetchOneRSTOnReviewStatus(rsD.review_status_id)
-                        if (foRstORs.review_status_type === true) {
-                            if (rsD.review_status_comment === null || rsD.review_status_comment === '') {
-                                return msg(res, 400, { message: 'กรุณากรอกความคิดเห็นสถานะการตรวจสอบ!' })
-                            }
-                        }
-
-                        // ดึงข้อมูล form_ipd_id จำนวน 1 record จากตาราง form_ipd_review_status_results อ้างอิงจาก form_ipd_id
-                        const cuFiRsr = await mraM.CheckUniqueFormIpdReviewStatusResult(fOFIIBPI.form_ipd_id)
-                        if (cuFiRsr) return msg(res, 409, { message: 'มีข้อมูลอยู่ในระบบแล้ว ไม่สามารถมีข้อมูลซ้ำได้!' })
-
-                        const FIRSRPayload = {
-                            form_ipd_id: fOFIIBPI.form_ipd_id,
-                            ...rsD,
+                    const rFIOF = overall.map(item => {
+                        return {
+                            ...item,
                             ...fullnamePayload
                         }
-                        // บันทึกข้อมูลไปยังตาราง form_ipd_review_status_results
-                        await mraM.InsertFormIpdReviewStatusResult(FIRSRPayload)
+                    })
+
+                    /*
+                        อัพเดทข้อมูลไปยังตาราง form_ipd_overall_finding_results
+                        อ้างอิงจาก
+                            form_ipd_id, overall_finding_id, form_ipd_overall_finding_result_id
+                    */
+                    const updatePromissesFIOF = rFIOF.map(i =>
+                        mraM.UpdateFormIpdOverallFindingResult(i, fOFIIBPI.form_ipd_id)
+                    )
+                    await Promise.all(updatePromissesFIOF)
+
+                    if (updatePromissesFIOF) {
+                        const { content, overall, ...rsD } = data
+                        if (Object.keys(rsD).length > 0) {
+                            fullnamePayload.created_by = req.fullname
+
+                            // ดึงข้อมูล review_status_type จำนวน 1 record จากตาราง review_status อ้างอิงจาก review_status_id
+                            const foRstORs = await mraM.FetchOneRSTOnReviewStatus(rsD.review_status_id)
+                            if (foRstORs.review_status_type === true) {
+                                if (rsD.review_status_comment === null || rsD.review_status_comment === '') {
+                                    return msg(res, 400, { message: 'กรุณากรอกความคิดเห็นสถานะการตรวจสอบ!' })
+                                }
+                            }
+
+                            // ดึงข้อมูล form_ipd_id จำนวน 1 record จากตาราง form_ipd_review_status_results อ้างอิงจาก form_ipd_id
+                            const cuFiRsr = await mraM.CheckUniqueFormIpdReviewStatusResult(fOFIIBPI.form_ipd_id)
+                            if (cuFiRsr) return msg(res, 409, { message: 'มีข้อมูลอยู่ในระบบแล้ว ไม่สามารถมีข้อมูลซ้ำได้!' })
+
+                            const FIRSRPayload = {
+                                form_ipd_id: fOFIIBPI.form_ipd_id,
+                                ...rsD,
+                                ...fullnamePayload
+                            }
+                            // บันทึกข้อมูลไปยังตาราง form_ipd_review_status_results
+                            await mraM.InsertFormIpdReviewStatusResult(FIRSRPayload)
+                        }
                     }
                 }
             }

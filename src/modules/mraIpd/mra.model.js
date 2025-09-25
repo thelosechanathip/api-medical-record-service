@@ -405,4 +405,6 @@ exports.UpdateFormIpdOverallFindingResult = async (row, formIpdId) => {
         data,
     })
 }
+
+exports.UpdateFormIpd = async (form_ipd_id, data) => await pm.form_ipds.update({ where: { form_ipd_id: form_ipd_id }, data: data })
 // Update End #################################################################################################################################
