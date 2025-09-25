@@ -91,6 +91,13 @@ exports.FetchOneMedicalRecordAuditIPDByAn = async (req, res) => {
         const startTime = Date.now()
         const FoMraIpd = await mraM.FetchOneMedicalRecordAuditIPD(FAIP.patient_id)
         if (!FoMraIpd) return msg(res, 404, { message: 'Data not found!' })
+        // console.log(FoMraIpd[0].form_ipd_id)
+
+        const FoPBFii = await mraM.FetchOnePdfByFormIpdId(FoMraIpd[0].form_ipd_id)
+        if (FoMraIpd) {
+            const result= Buffer.from(FoPBFii.pdf_file).toString('base64')
+            return msg(res, 409, { data: result })
+        }
 
         const resultsWithDefaultSum = []
 
@@ -169,8 +176,9 @@ exports.FetchOnePdfByAn = async (req, res) => {
         if (!FPiIFi) return msg(res, 404, { message: 'Data not found!' })
 
         const FoPBFii = await mraM.FetchOnePdfByFormIpdId(FPiIFi.form_ipd_id)
+        const result = Buffer.from(FoPBFii.pdf_file).toString('base64')
 
-        return msg(res, 200, { data: FoPBFii })
+        return msg(res, 200, { data: result })
     } catch (err) {
         console.log('FetchOnePdfByAn : ', err)
         return msg(res, 500, { message: err.message })
