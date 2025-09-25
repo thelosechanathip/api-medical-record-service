@@ -21,6 +21,8 @@ exports.RemoveFormIpdOverallFindingResult = async (form_ipd_id) =>
 exports.RemoveFormIpdContentOfMedicalRecordResult = async (form_ipd_id) =>
     await pm.form_ipd_content_of_medical_record_results.deleteMany({ where: { form_ipd_id: form_ipd_id } })
 
+exports.RemovePdf = async (form_ipd_id) => await pm.pdf.deleteMany({ where: { form_ipd_id: form_ipd_id } })
+
 // Remove ข้อมูล form_ipds จำนวน 1 record อ้างอิงจาก form_ipd_id
 exports.RemoveFormIpd = async (form_ipd_id) =>
     await pm.form_ipds.delete({ where: { form_ipd_id: form_ipd_id } })
