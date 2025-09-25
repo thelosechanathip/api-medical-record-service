@@ -158,6 +158,34 @@ exports.FetchOnePatientData = async (req, res) => {
     }
 }
 
+// Insert PDF
+exports.InsertPdf = async (req, res) => {
+    try {
+        const { binary, ...data } = req.body
+
+        const FaBFii = await mraM.FetchAnByFormIpdId(data.form_ipd_id)
+        if (!FaBFii) return msg(res, 404, { message: 'Data not found!' })
+
+        const FoPBFii = await mraM.FetchOnePdfByFormIpdId(data.form_ipd_id)
+        if (FoPBFii) return msg(res, 409, { message: 'PDF already exists!' })
+
+        const buffer = Buffer.from(binary, 'base64')
+
+        // Set Data
+        data.file_name = FaBFii.patients.patient_an + ".pdf"
+        data.mime_type = 'application/pdf'
+        data.pdf_file = buffer
+        data.created_by = req.fullname
+
+        const IP = await mraM.InsertPdf(data)
+
+        return msg(res, 200, { message: "Generate PDF Successfully!" })
+    } catch (err) {
+        console.log('InsertPdf : ', err)
+        return msg(res, 500, { message: err.message })
+    }
+}
+
 // สร้าง Form
 exports.GenerateForm = async (req, res) => {
     // รับค่าจาก User

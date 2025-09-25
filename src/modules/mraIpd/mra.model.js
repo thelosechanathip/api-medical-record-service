@@ -229,7 +229,8 @@ exports.FetchAnInPatient = async (patient_an) =>
     await pm.patients.findFirst({ where: { patient_an: patient_an }, select: { patient_id: true } })
 
 // ดึงข้อมูล form_ipd_id จำนวน 1 record จากตาราง form_ipds อ้างอิงจาก patient_id
-exports.FetchPatientIdInFormIpd = async (patient_id) => await pm.form_ipds.findFirst({ where: { patient_id: patient_id }, select: { form_ipd_id: true } })
+exports.FetchPatientIdInFormIpd = async (patient_id) =>
+    await pm.form_ipds.findFirst({ where: { patient_id: patient_id }, select: { form_ipd_id: true } })
 
 // ดึงข้อมูลทั้งหมด overall_finding_id จากตาราง overall_finding อ้างอิงจาก patient_service_id และเรียงลำดับจากน้อยไปมากโดยอ้างอิง priority
 exports.FetchOverallFindingByPatientId = async (patient_service_id) => {
@@ -280,6 +281,19 @@ exports.FetchTypeContentOfMedicalRecordById = async (content_of_medical_record_i
 
 exports.FetchOneReviewStatusByPatientServiceId = async (patient_service_id) =>
     await pm.review_status.findMany({ where: { patient_service_id: patient_service_id }, orderBy: { priority: 'asc' } })
+
+exports.FetchAnByFormIpdId = async (form_ipd_id) =>
+    await pm.form_ipds.findFirst({
+        where: { form_ipd_id: form_ipd_id },
+        select: {
+            patients: {
+                select: { patient_an: true }
+            }
+        }
+    })
+
+exports.FetchOnePdfByFormIpdId = async (form_ipd_id) =>
+    await pm.pdf.findFirst({ where: { form_ipd_id: form_ipd_id }, select: { pdf_id: true } })
 // Fetch End #################################################################################################################################
 
 // Insert Start #################################################################################################################################
@@ -300,6 +314,8 @@ exports.InsertFormIpdOverallFindingResult = async (data) =>
 // บันทึกข้อมูลไปยังตาราง form_ipd_review_status_results
 exports.InsertFormIpdReviewStatusResult = async (data) =>
     await pm.form_ipd_review_status_results.create({ data: data })
+
+exports.InsertPdf = async (data) => await pm.pdf.create({ data: data })
 // Insert End #################################################################################################################################
 
 // Update Start #################################################################################################################################
