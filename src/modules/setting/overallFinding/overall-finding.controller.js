@@ -93,18 +93,13 @@ exports.UpdateOverallFinding = async (req, res) => {
         const ofd = req.body
 
         if (!ofd.overall_finding_name) return msg(res, 400, { message: 'กรุณากรอกชื่อการค้นพบ!' })
-        if (!ofd.patient_service_id) return msg(res, 400, { message: 'กรุณากรอกกลุ่มคนไข้!' })
 
-        const cpsi = await ofm.CheckPatientServiceId({ patient_service_id: ofd.patient_service_id })
-        if (!cpsi) return msg(res, 404, { message: 'ไม่มีข้อมูลคำระบุของกลุ่มคนไข้ที่เลือกมากรุณาตรวจสอบ!' })
+        let cpError = false
+        for (const [k, v] of Object.entries(ofd)) if (k == 'patient_service_id') cpError = true
+        if (cpError == true) return msg(res, 400, { message: 'ไม่อนุญาติให้แก้ไขกลุ่มคนไข้ เพื่อป้องกันข้อมูลทับซ้อน!' })
 
-        const cu = await ofm.CheckUnique({
-            overall_finding_name: ofd.overall_finding_name,
-            patient_service_id: ofd.patient_service_id
-        })
-        if (cu) return msg(res, 409, {
-            message: `มีข้อมูล ${ofd.overall_finding_name} ในกลุ่มคนไข้ ${cpsi.patient_service_name_english} อยู่แล้วไม่อนุญาตให้บันทึกข้อมูลซ้ำในกลุ่มคนไข้เดียวกัน!`
-        })
+        const FoOfNbOfi = await ofm.FetchOneOverallFindingNotByOverallFindingId(ofId, ofd.overall_finding_name, foof.patient_service_id)
+        if (FoOfNbOfi.length >= 1) return msg(res, 409, { message: 'ไม่อนุญาตให้บันทึกข้อมูลซ้ำในชื่อการค้นพบนี้!' })
 
         ofd.updated_by = req.fullname
 
@@ -129,6 +124,24 @@ exports.RemoveOverallFinding = async (req, res) => {
         const ofId = req.params.ofId
         const foof = await ofm.FetchOneOverallFindingById({ overall_finding_id: ofId }) // foof = fetch one overall finding by id
         if (!foof) return msg(res, 404, { message: 'Data not found!' })
+
+        const CFk = await comrm.CheckForeignKey()
+
+        if (CFk.length > 0) {
+            let hasReference = false
+
+            for (const row of CFk) {
+                const tableName = row.TABLE_NAME
+                const columnName = row.COLUMN_NAME
+
+                const checkData = await comrm.CheckForeignKeyData(tableName, columnName, ofId)
+
+                if (checkData.length > 0) hasReference = true
+            }
+
+            // ถ้ามีตารางที่อ้างอิงอยู่ → ห้ามลบ
+            if (hasReference) return msg(res, 400, { message: "ไม่สามารถลบได้ เนื่องจากข้อมูลนี้ยังถูกใช้งานอยู่ กรุณาลบหรือแก้ไขข้อมูลที่เกี่ยวข้องก่อน!" })
+        }
 
         const startTime = Date.now()
         const rof = await ofm.RemoveOverallFinding({ overall_finding_id: ofId })

@@ -324,6 +324,7 @@ model form_ipd_overall_finding_results {
   updated_by                         String?         @default("admin") // ชื่อผู้อัพเดท
 }
 
+// ตารางเก็บข้อมูล PDF
 model pdf {
   pdf_id      String    @id @default(uuid())
   form_ipds   form_ipds @relation(fields: [form_ipd_id], references: [form_ipd_id], onDelete: Restrict)

@@ -27,11 +27,12 @@ exports.FetchOneContentOfMedicalRecordById = async (id) =>
         }
     })
 
-exports.FetchOneContentOfMedicalRecordNotByPatientServiceId = async (content_of_medical_record_id, content_of_medical_record_name) =>
+exports.FetchOneContentOfMedicalRecordNotByContentOfMedicalRecordId = async (content_of_medical_record_id, content_of_medical_record_name, patient_service_id) =>
     await pm.content_of_medical_records.findMany({ 
         where: {
             content_of_medical_record_id: { not: content_of_medical_record_id },
-            content_of_medical_record_name: content_of_medical_record_name 
+            content_of_medical_record_name: content_of_medical_record_name,
+            patient_service_id: patient_service_id,
         }
     })
 

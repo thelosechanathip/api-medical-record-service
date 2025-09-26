@@ -93,18 +93,17 @@ exports.UpdateReviewStatus = async (req, res) => {
         const rstd = req.body
 
         if (!rstd.review_status_name) return msg(res, 400, { message: 'กรุณากรอกสถานะการตรวจสอบ!' })
-        if (!rstd.patient_service_id) return msg(res, 400, { message: 'กรุณากรอกกลุ่มคนไข้!' })
 
-        const cpsi = await rstm.CheckPatientServiceId({ patient_service_id: rstd.patient_service_id })
-        if (!cpsi) return msg(res, 404, { message: 'ไม่มีข้อมูลคำระบุของกลุ่มคนไข้ที่เลือกมากรุณาตรวจสอบ!' })
+        let cpError = false
+        for (const [k, v] of Object.entries(rstd)) if (k == 'patient_service_id') cpError = true
+        if (cpError == true) return msg(res, 400, { message: 'ไม่อนุญาติให้แก้ไขกลุ่มคนไข้ เพื่อป้องกันข้อมูลทับซ้อน!' })
 
-        const cu = await rstm.CheckUnique({
-            review_status_name: rstd.review_status_name,
-            patient_service_id: rstd.patient_service_id
-        })
-        if (cu) return msg(res, 409, {
-            message: `มีข้อมูล ${rstd.review_status_name} ในกลุ่มคนไข้ ${cpsi.patient_service_name_english} อยู่แล้วไม่อนุญาตให้บันทึกข้อมูลซ้ำในกลุ่มคนไข้เดียวกัน!`
-        })
+        const FoRstNbRsi = await rstm.FetchOneReviewStatusNotByReviewStatusId(
+            rstId,
+            rstd.review_status_name,
+            forstbi.patient_service_id
+        )
+        if (FoRstNbRsi >= 1) return msg(res, 409, { message: "ไม่อนุญาตให้บันทึกข้อมูลซ้ำในสถานะการตรวจสอบนี้!" })
 
         rstd.updated_by = req.fullname
 
@@ -129,6 +128,24 @@ exports.RemoveReviewStatus = async (req, res) => {
         const rstId = req.params.rstId // rstId = review status id
         const forstbi = await rstm.FetchOneReviewStatusById({ review_status_id: rstId }) // forstbi = fetch one review status by id
         if (!forstbi) return msg(res, 404, { message: 'Data not found!' })
+
+        const CFk = await comrm.CheckForeignKey()
+
+        if (CFk.length > 0) {
+            let hasReference = false
+
+            for (const row of CFk) {
+                const tableName = row.TABLE_NAME
+                const columnName = row.COLUMN_NAME
+
+                const checkData = await comrm.CheckForeignKeyData(tableName, columnName, rstId)
+
+                if (checkData.length > 0) hasReference = true
+            }
+
+            // ถ้ามีตารางที่อ้างอิงอยู่ → ห้ามลบ
+            if (hasReference) return msg(res, 400, { message: "ไม่สามารถลบได้ เนื่องจากข้อมูลนี้ยังถูกใช้งานอยู่ กรุณาลบหรือแก้ไขข้อมูลที่เกี่ยวข้องก่อน!" })
+        }
 
         const startTime = Date.now()
         const rrst = await rstm.RemoveReviewStatus({ review_status_id: rstId }) // rrst = remove review status

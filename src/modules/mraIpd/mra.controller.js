@@ -165,27 +165,25 @@ exports.FetchOnePatientData = async (req, res) => {
     }
 }
 
-// exports.FetchOnePdfByAn = async (req, res) => {
-//     try {
-//         const { patient_an } = req.params
+exports.FetchOnePdfByAn = async (req, res) => {
+    try {
+        const { patient_an } = req.params
 
-//         const FAIP = await mraM.FetchAnInPatient(patient_an)
-//         if (!FAIP) return msg(res, 404, { message: `${patient_an} นี้ไม่มีข้อมูลอยู่ในระบบ!` })
+        const FAIP = await mraM.FetchAnInPatient(patient_an)
+        if (!FAIP) return msg(res, 404, { message: `${patient_an} นี้ไม่มีข้อมูลอยู่ในระบบ!` })
 
-//         const FPiIFi = await mraM.FetchPatientIdInFormIpd(FAIP.patient_id)
-//         if (!FPiIFi) return msg(res, 404, { message: 'Data not found!' })
+        const FPiIFi = await mraM.FetchPatientIdInFormIpd(FAIP.patient_id)
+        if (!FPiIFi) return msg(res, 404, { message: 'Data not found!' })
 
-//         const FoPBFii = await mraM.FetchOnePdfByFormIpdId(FPiIFi.form_ipd_id)
-//         const result = Buffer.from(FoPBFii.pdf_file).toString('base64')
+        const FoPBFii = await mraM.FetchOnePdfByFormIpdId(FPiIFi.form_ipd_id)
+        FoPBFii.pdf_file = Buffer.from(FoPBFii.pdf_file).toString('base64')
 
-//         return msg(res, 200, { data: result })
-//     } catch (err) {
-//         console.log('FetchOnePdfByAn : ', err)
-//         return msg(res, 500, { message: err.message })
-//     }
-// }
-
-// Insert PDF
+        return msg(res, 200, { data: FoPBFii })
+    } catch (err) {
+        console.log('FetchOnePdfByAn : ', err)
+        return msg(res, 500, { message: err.message })
+    }
+}
 
 exports.InsertPdf = async (req, res) => {
     try {

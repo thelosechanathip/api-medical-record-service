@@ -92,13 +92,16 @@ exports.UpdateContentOfMedicalRecord = async (req, res) => {
 
         const comrd = req.body
 
+        if (!comrd.content_of_medical_record_name) return msg(res, 400, { message: 'กรุณากรอกชื่อประเภทข้อมูล!' })
+
         let cpError = false
         for (const [k, v] of Object.entries(comrd)) if (k == 'patient_service_id') cpError = true
         if (cpError == true) return msg(res, 400, { message: 'ไม่อนุญาติให้แก้ไขกลุ่มคนไข้ เพื่อป้องกันข้อมูลทับซ้อน!' })
 
-        const FoComrNbPsi = await comrm.FetchOneContentOfMedicalRecordNotByPatientServiceId(
+        const FoComrNbPsi = await comrm.FetchOneContentOfMedicalRecordNotByContentOfMedicalRecordId(
             comrId,
-            comrd.content_of_medical_record_name
+            comrd.content_of_medical_record_name,
+            focomr.patient_service_id
         )
         if (FoComrNbPsi.length >= 1) return msg(res, 409, { message: 'ไม่อนุญาตให้บันทึกข้อมูลซ้ำในชื่อประเภทข้อมูลนี้!' })
 

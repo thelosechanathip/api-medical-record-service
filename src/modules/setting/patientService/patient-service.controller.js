@@ -109,35 +109,19 @@ exports.UpdatePatientService = async (req, res) => {
 
         const ptsd = req.body // ptsd = patient service data
 
-        // ตรวจสอบค่าซ้ำ โดยเก็บค่า duplicate message ไว้ก่อน
-        const duplicateStatus = []
-        const duplicateMessage = []
-        let hasEmptyValue = false // Flag สำหรับตรวจสอบค่าที่ว่าง
+        if (!ptsd.patient_service_name_thai) return msg(res, 400, { message: 'กรุณากรอกคำระบุของกลุ่มคนไข้ไทย!' })
+        if (!ptsd.patient_service_name_english) return msg(res, 400, { message: 'กรุณากรอกคำระบุของกลุ่มคนไข้อังกฤษ!' })
 
-        await Promise.all(
-            Object.entries(ptsd).map(async ([key, value]) => {
-                // ถ้าพบค่าว่าง ให้ตั้งค่า flag เป็น true
-                if (!value) hasEmptyValue = true
-
-                // ตรวจสอบค่าซ้ำเฉพาะ field ที่ไม่ว่าง
-                if (value) {
-                    const ffpts = await ptsm.FindFirstPatientService(key, value) // ffpts = find first patient service
-                    if (ffpts) {
-                        duplicateStatus.push(409)
-                        duplicateMessage.push(`( ${value} ) มีข้อมูลในระบบแล้ว ไม่อนุญาตให้บันทึกข้อมูลซ้ำ!`)
-                    }
-                }
-            })
+        const FoPsNbPsi  = await ptsm.FetchOnePatientServiceNotByPatientServiceId(
+            ptsId, 
+            ptsd.patient_service_name_thai, 
+            ptsd.patient_service_name_english
         )
-
-        // ถ้ามีค่าที่ว่าง ให้เพิ่มข้อความแค่ครั้งเดียว
-        if (hasEmptyValue) {
-            duplicateMessage.unshift("กรุณากรอกข้อมูลให้ครบถ้วน!")
-            return msg(res, 400, { message: duplicateMessage[0] })
-        }
-
-        // ถ้ามีข้อมูลซ้ำหรือค่าที่ว่าง ให้ส่ง response กลับครั้งเดียว
-        if (duplicateMessage.length > 0) return msg(res, Math.max(...duplicateStatus), { message: duplicateMessage.join(" AND ") })
+        if (FoPsNbPsi.length >= 1 && FoPsNbPsi[0].patient_service_name_thai === ptsd.patient_service_name_thai) 
+            return msg(res, 409, { message: 'ไม่อนุญาตให้บันทึกข้อมูลคำระบุของกลุ่มคนไข้ไทยนี้!' })
+    
+        if (FoPsNbPsi.length >= 1 && FoPsNbPsi[0].patient_service_name_english === ptsd.patient_service_name_english)
+            return msg(res, 409, { message: 'ไม่อนุญาตให้บันทึกข้อมูลคำระบุของกลุ่มคนไข้อังกฤษนี้!' })
 
         ptsd.updated_by = req.fullname
 
@@ -163,6 +147,24 @@ exports.RemovePatientService = async (req, res) => {
 
         const foptsbi = await ptsm.FetchOnePatientServiceById(ptsId) // foptsbi = fetch one patient service by id
         if (!foptsbi) return msg(res, 404, { message: 'Data not found!' })
+
+        const CFk = await comrm.CheckForeignKey()
+
+        if (CFk.length > 0) {
+            let hasReference = false
+
+            for (const row of CFk) {
+                const tableName = row.TABLE_NAME
+                const columnName = row.COLUMN_NAME
+
+                const checkData = await comrm.CheckForeignKeyData(tableName, columnName, ptsId)
+
+                if (checkData.length > 0) hasReference = true
+            }
+
+            // ถ้ามีตารางที่อ้างอิงอยู่ → ห้ามลบ
+            if (hasReference) return msg(res, 400, { message: "ไม่สามารถลบได้ เนื่องจากข้อมูลนี้ยังถูกใช้งานอยู่ กรุณาลบหรือแก้ไขข้อมูลที่เกี่ยวข้องก่อน!" })
+        }
 
         const startTime = Date.now()
         const rtps = await ptsm.RemovePatientService(ptsId) // rtps = remove patient service
