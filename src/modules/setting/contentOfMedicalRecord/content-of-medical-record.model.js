@@ -27,6 +27,14 @@ exports.FetchOneContentOfMedicalRecordById = async (id) =>
         }
     })
 
+exports.FetchOneContentOfMedicalRecordNotByPatientServiceId = async (content_of_medical_record_id, content_of_medical_record_name) =>
+    await pm.content_of_medical_records.findMany({ 
+        where: {
+            content_of_medical_record_id: { not: content_of_medical_record_id },
+            content_of_medical_record_name: content_of_medical_record_name 
+        }
+    })
+
 exports.UpdateContentOfMedicalRecord = async (id, data) =>
     await pm.content_of_medical_records.update({ where: id, data: data })
 
