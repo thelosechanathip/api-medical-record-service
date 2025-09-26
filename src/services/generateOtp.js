@@ -1,10 +1,12 @@
 const NodeCache = require("node-cache")
 const otpCache = new NodeCache({ stdTTL: process.env.OTP_EXPIRED })
 
+// Function Generate เลข OTP 6 หลัก
 exports.generateOtp = async (identifier) => {
     const otp = Math.floor(100000 + Math.random() * 900000).toString() // สร้างตัวเลข 6 หลัก
     await otpCache.set(identifier, otp)
     return otp
 }
 
+// Function ดึงข้อมูล OTP จาก Cache
 exports.getOtp = async (identifier) => await otpCache.get(identifier)

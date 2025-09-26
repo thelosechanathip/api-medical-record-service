@@ -1,6 +1,6 @@
 const axios = require("axios")
 
-// Send Message To Application Telegram
+// Function ส่งข้อมูลไปยังระบบ Telegram
 exports.sendTelegramMessage = async (chatId, otpCode, botToken) => {
     // const botToken = process.env.TELEGRAM_BOT_TOKEN;
     const telegramApiUrl = `https://api.telegram.org/bot${botToken}/sendMessage`

@@ -1,5 +1,6 @@
 const jwt = require("jsonwebtoken")
 
+// Function Generate Token
 exports.Sign = async (userId, chatId) => {
     return await jwt.sign(
         {
@@ -14,6 +15,7 @@ exports.Sign = async (userId, chatId) => {
     )
 }
 
+// Function Verify Token
 exports.Verify = async (token) => {
     return await jwt.verify(token, process.env.SECRET_KEY)
 }

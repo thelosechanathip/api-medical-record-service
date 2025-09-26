@@ -1,3 +1,4 @@
+// Funciton Set ข้อมูล Log การทำงานของระบบก่อนที่จะบันทึกไปยัง Database
 exports.setLog = (req, fullname, endTime, resultData) => {
     // Declare variables(ประกาศตัวแปร)
     let row_count

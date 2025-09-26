@@ -125,7 +125,7 @@ exports.RemoveOverallFinding = async (req, res) => {
         const foof = await ofm.FetchOneOverallFindingById({ overall_finding_id: ofId }) // foof = fetch one overall finding by id
         if (!foof) return msg(res, 404, { message: 'Data not found!' })
 
-        const CFk = await comrm.CheckForeignKey()
+        const CFk = await ofm.CheckForeignKey()
 
         if (CFk.length > 0) {
             let hasReference = false
@@ -134,7 +134,7 @@ exports.RemoveOverallFinding = async (req, res) => {
                 const tableName = row.TABLE_NAME
                 const columnName = row.COLUMN_NAME
 
-                const checkData = await comrm.CheckForeignKeyData(tableName, columnName, ofId)
+                const checkData = await ofm.CheckForeignKeyData(tableName, columnName, ofId)
 
                 if (checkData.length > 0) hasReference = true
             }

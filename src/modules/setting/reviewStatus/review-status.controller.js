@@ -129,7 +129,7 @@ exports.RemoveReviewStatus = async (req, res) => {
         const forstbi = await rstm.FetchOneReviewStatusById({ review_status_id: rstId }) // forstbi = fetch one review status by id
         if (!forstbi) return msg(res, 404, { message: 'Data not found!' })
 
-        const CFk = await comrm.CheckForeignKey()
+        const CFk = await rstm.CheckForeignKey()
 
         if (CFk.length > 0) {
             let hasReference = false
@@ -138,7 +138,7 @@ exports.RemoveReviewStatus = async (req, res) => {
                 const tableName = row.TABLE_NAME
                 const columnName = row.COLUMN_NAME
 
-                const checkData = await comrm.CheckForeignKeyData(tableName, columnName, rstId)
+                const checkData = await rstm.CheckForeignKeyData(tableName, columnName, rstId)
 
                 if (checkData.length > 0) hasReference = true
             }
