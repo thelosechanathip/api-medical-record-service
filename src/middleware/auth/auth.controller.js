@@ -55,6 +55,10 @@ exports.CheckTokenAdmin = async (req, res, next) => {
 
         // นำข้อมูล decoded เก็บไว้ในตัวแปร user
         req.user = decoded
+        // นำข้อมูล fullname จาก cr เก็บไว้ในตัวแปร fullname
+        req.fullname = cr.fullname
+        // นำข้อมูล token เก็บไว้ในตัวแปร token
+        req.token = token
 
         // ถ้าผ่านเงื่อนทั้งหมดถ้าบนก็สามารถผ่านไปยัง route ต่อได้
         next()
@@ -120,7 +124,7 @@ exports.CheckTokenUser = async (req, res, next) => {
         req.user = decoded
         // นำข้อมูล fullname จาก cr เก็บไว้ในตัวแปร fullname
         req.fullname = cr.fullname
-        // นำข้อมูล tokem เก็บไว้ในตัวแปร token
+        // นำข้อมูล token เก็บไว้ในตัวแปร token
         req.token = token
 
         // ถ้าผ่านเงื่อนทั้งหมดถ้าบนก็สามารถผ่านไปยัง route ต่อได้

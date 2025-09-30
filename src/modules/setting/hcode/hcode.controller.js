@@ -32,7 +32,13 @@ exports.UpsertHcode = async (req, res) => {
             hcodeData.updated_by = req.fullname
         }
 
+        const startTime = Date.now()
         const UHc = await chm.UpsertHcode(hcodeId[0], hcodeData)
+        const endTime = Date.now() - startTime
+
+        // Set and Insert Log
+        const sl = setLog(req, req.fullname, endTime, UHc)
+        await chm.InsertLog(sl)
 
         return msg(res, 200, { message: "Upsert data successfully!" })
     } catch (err) {
