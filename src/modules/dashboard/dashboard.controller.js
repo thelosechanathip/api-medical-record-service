@@ -4,25 +4,33 @@ const dbM = require('./dashboard.model')
 exports.FetchMraIpdCount = async (_, res) => {
     try {
         const CA = await dbM.CountAll()
-        if (!CA) return msg(res, 404, { message: 'ไม่พบข้อมูล!' })
 
         const CaPctNn = await dbM.CountAllPercentageNotNull()
-        if (!CaPctNn) return msg(res, 404, { message: 'ไม่พบข้อมูล!' })
 
         const CaPctN = await dbM.CountAllPercentageNull()
 
         const CFiBW = await dbM.CountFormIpdByWard()
-        if (!CFiBW) return msg(res, 404, { message: 'ไม่พบข้อมูล!' })
 
         const CDtFiBS = await dbM.CountDistinctFormIpdByService()
-        if (!CDtFiBS) return msg(res, 404, { message: 'ไม่พบข้อมูล!' })
+
+        const APsne = await dbM.AveragePatientServiceNameEnglish()
+
+        const AW = await dbM.AverageWard()
+
+        const AA = await dbM.AverageAll()
+       
+        if (!CA || !CaPctNn || !CFiBW || !CDtFiBS || !APsne || !AW || !AA) 
+            return msg(res, 404, { message: 'ไม่พบข้อมูล!' })
 
         return msg(res, 200, {
             countAll: CA,
             countAllPercentageNotNull: CaPctNn,
             countAllPercentageNull: CaPctN,
             countWard: CFiBW,
-            countPatientService: CDtFiBS
+            countPatientService: CDtFiBS,
+            averagePatientServiceNameEnglish: APsne,
+            averageWard: AW,
+            averageAll: AA
         })
     } catch (err) {
         console.log('FetchMraIpdCount : ', err)
