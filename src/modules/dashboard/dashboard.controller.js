@@ -10,9 +10,6 @@ exports.FetchMraIpdCount = async (_, res) => {
         if (!CaPctNn) return msg(res, 404, { message: 'Data not found!' })
 
         const CaPctN = await dbM.CountAllPercentageNull()
-        if (!CaPctN) return msg(res, 404, { message: 'Data not found!' })
-
-        console.log(CaPctN)
 
         const CFiBW = await dbM.CountFormIpdByWard()
         if (!CFiBW) return msg(res, 404, { message: 'Data not found!' })
