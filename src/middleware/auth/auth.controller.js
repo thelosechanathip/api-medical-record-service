@@ -49,9 +49,20 @@ exports.CheckTokenAdmin = async (req, res, next) => {
             ของ Database backoffice
         */
         const cr = await am.CheckRole(decoded.userId)
+        
+        const roles = [
+            'กลุ่มงานสุขภาพดิจิทัล'
+        ]
 
-        // ถ้า status จาก cr มีค่าไม่เท่ากับ ADMIN จะส่ง Response กลับไปยัง Client
-        if (cr.status != 'ADMIN') return msg(res, 401, { message: 'User นี้ไม่อนุญาตให้เข้าถึงข้อมูล' })
+        let roleActive = false
+
+        for (const role of roles) {
+            if (cr.department === role) {
+                roleActive = true
+                break
+            }
+        }
+        if (roleActive === false) return msg(res, 401, { message: 'User นี้ไม่อนุญาตให้เข้าถึงข้อมูล' })
 
         // นำข้อมูล decoded เก็บไว้ในตัวแปร user
         req.user = decoded
@@ -119,6 +130,21 @@ exports.CheckTokenUser = async (req, res, next) => {
             ของ Database backoffice
         */
         const cr = await am.CheckRole(decoded.userId)
+        
+        const roles = [
+            'กลุ่มงานพยาบาล',
+            'กลุ่มงานสุขภาพดิจิทัล'
+        ]
+
+        let roleActive = false
+
+        for (const role of roles) {
+            if (cr.department === role) {
+                roleActive = true
+                break
+            }
+        }
+        if (roleActive === false) return msg(res, 401, { message: 'User นี้ไม่อนุญาตให้เข้าถึงข้อมูล' })
 
         // นำข้อมูล decoded เก็บไว้ในตัวแปร user
         req.user = decoded

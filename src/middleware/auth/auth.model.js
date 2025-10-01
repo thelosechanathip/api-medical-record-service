@@ -31,12 +31,14 @@ exports.CheckRole = async (userId) => {
     const [rows] = await db_b.query(
         `
             SELECT
-                u.status,
+                u.STATUS AS status,
+                hdpm.HR_DEPARTMENT_NAME AS department,
                 CONCAT(hpf.HR_PREFIX_NAME, u.NAME) AS fullname
             FROM
                 users AS u
-                LEFT OUTER JOIN hrd_person hps ON u.PERSON_ID = hps.ID
-                LEFT OUTER JOIN hrd_prefix hpf ON hps.HR_PREFIX_ID = hpf.HR_PREFIX_ID
+                LEFT OUTER JOIN hrd_person AS hps ON u.PERSON_ID = hps.ID
+                LEFT OUTER JOIN hrd_prefix AS hpf ON hps.HR_PREFIX_ID = hpf.HR_PREFIX_ID
+                LEFT OUTER JOIN hrd_department AS hdpm ON hps.HR_DEPARTMENT_ID = hdpm.HR_DEPARTMENT_ID
             WHERE
                 u.id = ?
         `, [userId]
