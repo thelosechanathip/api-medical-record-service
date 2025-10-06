@@ -142,7 +142,7 @@ exports.InsertPdf = async (req, res) => {
         // Set Data
         data.file_name = FaBFii.patients.patient_an + ".pdf"
         data.mime_type = 'application/pdf'
-        data.pdf_file = buffer
+        data.pdf_ipd_file = buffer
         data.created_by = req.fullname
 
         const IP = await mraM.InsertPdf(data)
