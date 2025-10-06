@@ -6,13 +6,13 @@ async function main() {
     await pm.$connect()
 
     // 💥table hcodes
-    await pm.hcodes.createMany({
-        data: [
-            { hcode: 11098, hcode_name: 'โรงพยาบาลอากาศอำนวย' },
-        ],
-        skipDuplicates: true, // rerun ได้ไม่ล้ม
-    })
-    console.log('✅ Hcodes completed')
+    // await pm.hcodes.createMany({
+    //     data: [
+    //         { hcode: 11098, hcode_name: 'โรงพยาบาลอากาศอำนวย' },
+    //     ],
+    //     skipDuplicates: true, // rerun ได้ไม่ล้ม
+    // })
+    // console.log('✅ Hcodes completed')
 
     // 💥table patient_services
     await pm.patient_services.createMany({

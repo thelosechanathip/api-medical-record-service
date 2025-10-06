@@ -19,7 +19,7 @@ exports.FetchMraIpdCount = async (_, res) => {
 
         const AA = await dbM.AverageAll()
        
-        if (!CA || !CaPctNn || !CFiBW || !CDtFiBS || !APsne || !AW || !AA) 
+        if (!CA || !CFiBW || !CDtFiBS || !APsne || !AW || !AA) 
             return msg(res, 404, { message: 'ไม่พบข้อมูล!' })
 
         return msg(res, 200, {
