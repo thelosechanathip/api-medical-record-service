@@ -251,7 +251,7 @@ async function main() {
     })
     console.log('✅ Content of medical record IPD completed')
 
-    // 💥table content_of_medical_records OPD
+    // 💥table content_of_medical_records OPD & ER
     await pm.content_of_medical_records.createMany({
         data: [
             {
@@ -417,6 +417,7 @@ async function main() {
         ],
         skipDuplicates: true, // rerun ได้ไม่ล้ม
     })
+    console.log('✅ Content of medical record OPD & ER completed')
 
     // 💥table review_status IPD
     await pm.review_status.createMany({
@@ -445,7 +446,36 @@ async function main() {
         ],
         skipDuplicates: true, // rerun ได้ไม่ล้ม
     })
-    console.log('✅ Review status completed')
+    console.log('✅ Review status IPD completed')
+
+    // 💥table review_status OPD & ER
+    await pm.review_status.createMany({
+        data: [
+            {
+                review_status_name: "Documentation inadequate for meaningful review",
+                review_status_description: "ข้อมูลไม่เพียงพอสำหรับการทบทวน",
+                review_status_type: false,
+                patient_service_id: fpsOpdEr.patient_service_id,
+                priority: 1,
+            },
+            {
+                review_status_name: "No Significant medical record issue identified",
+                review_status_description: "ไม่มีปัญหาสำคัญจากการทบทวน",
+                review_status_type: false,
+                patient_service_id: fpsOpdEr.patient_service_id,
+                priority: 2,
+            },
+            {
+                review_status_name: "Certain issues in question specify",
+                review_status_description: "มีปัญหาจากการทบทวนที่ต้องค้นต่อ",
+                review_status_type: true,
+                patient_service_id: fpsOpdEr.patient_service_id,
+                priority: 3,
+            },
+        ],
+        skipDuplicates: true, // rerun ได้ไม่ล้ม
+    })
+    console.log('✅ Review status OPD & ER completed')
 
     // 💥table overall_finding
     await pm.overall_finding.createMany({
@@ -464,6 +494,23 @@ async function main() {
         skipDuplicates: true, // rerun ได้ไม่ล้ม
     })
     console.log('✅ Overall finding completed')
+
+    // 💥table clinical_details
+    await pm.clinical_details.createMany({
+        data: [
+            {
+                clinical_detail_name: "General case",
+                patient_service_id: fpsOpdEr.patient_service_id,
+                priority: 1,
+            },
+            {
+                clinical_detail_name: "Chronic case",
+                patient_service_id: fpsOpdEr.patient_service_id,
+                priority: 2,
+            }
+        ]
+    })
+    console.log('✅ Clinical details OPD & ER completed')
 }
 
 main()
