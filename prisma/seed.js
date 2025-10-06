@@ -502,11 +502,13 @@ async function main() {
                 clinical_detail_name: "General case",
                 patient_service_id: fpsOpdEr.patient_service_id,
                 priority: 1,
+                check_status: false,
             },
             {
                 clinical_detail_name: "Chronic case",
                 patient_service_id: fpsOpdEr.patient_service_id,
                 priority: 2,
+                check_status: true,
             }
         ]
     })

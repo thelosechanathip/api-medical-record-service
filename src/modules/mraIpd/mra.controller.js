@@ -447,7 +447,7 @@ exports.UpdateForm = async (req, res) => {
 
                     if (updatePromissesFIOF) {
                         const { content, overall, ...rsD } = data
-                        if (Object.keys(rsD).length > 0) {
+                        if (Object.keys(rsD).length > 0 && rsD.review_status_id !== null) {
                             fullnamePayload.created_by = req.fullname
 
                             // ดึงข้อมูล review_status_type จำนวน 1 record จากตาราง review_status อ้างอิงจาก review_status_id
