@@ -84,6 +84,7 @@ model patients {
   hcode_id                String // Foreign Key ของตาราง hcodes( ข้อมูลรหัสประจำสถานพยาบาล )
   patient_fullname        String // คำนำหน้า-ชื่อ-สกุล คนไข้
   patient_hn              String // หมายเลขประจำตัวคนไข้
+  patient_cid             String // หมายเลขบัตรประจำตัวประชาชน
   patient_vn              String?     @unique // หมายเลขการเข้ารักษาตัวในโรงพยาบาล
   patient_an              String?     @unique // หมายเลขการนอนโรงพยาบาล
   patient_ward            String? // หมายเลขตึก
@@ -176,6 +177,7 @@ model content_of_medical_records {
   criterion_number_7_type                    Boolean?                                     @default(false) // ประเภทของ criterion_number_7
   criterion_number_8_type                    Boolean?                                     @default(false) // ประเภทของ criterion_number_8
   criterion_number_9_type                    Boolean?                                     @default(false) // ประเภทของ criterion_number_9
+  points_awarded_type                        Boolean?                                     @default(false) // ประเภทของคะแนนที่ถูกหัก
   points_deducted_type                       Boolean?                                     @default(false) // ประเภทของคะแนนที่ถูกหัก
   priority                                   Int // ลำดับความสำคัญ
   patient_services                           patient_services                             @relation(fields: [patient_service_id], references: [patient_service_id], onDelete: Restrict)
@@ -248,7 +250,7 @@ model form_ipds {
   form_ipd_content_of_medical_record_results form_ipd_content_of_medical_record_results[]
   form_ipd_review_status_results             form_ipd_review_status_results[]
   form_ipd_overall_finding_results           form_ipd_overall_finding_results[]
-  pdf                                        pdf[]
+  pdf_ipd                                    pdf_ipd[]
 }
 
 // Log การทำงานของ form_ipd
@@ -325,13 +327,13 @@ model form_ipd_overall_finding_results {
 }
 
 // ตารางเก็บข้อมูล PDF
-model pdf {
-  pdf_id      String    @id @default(uuid())
-  form_ipds   form_ipds @relation(fields: [form_ipd_id], references: [form_ipd_id], onDelete: Restrict)
-  form_ipd_id String
-  file_name   String
-  mime_type   String    @default("application/pdf")
-  pdf_file    Bytes     @db.LongBlob
-  created_at  DateTime  @default(now()) // วัน-เวลาที่บันทึก
-  created_by  String?   @default("admin") // ชื่อผู้บันทึก
+model pdf_ipd {
+  pdf_ipd_id   String    @id @default(uuid())
+  form_ipds    form_ipds @relation(fields: [form_ipd_id], references: [form_ipd_id], onDelete: Restrict)
+  form_ipd_id  String
+  file_name    String
+  mime_type    String    @default("application/pdf")
+  pdf_ipd_file Bytes     @db.LongBlob
+  created_at   DateTime  @default(now()) // วัน-เวลาที่บันทึก
+  created_by   String?   @default("admin") // ชื่อผู้บันทึก
 }

@@ -21,7 +21,7 @@ exports.RemoveFormIpdOverallFindingResult = async (form_ipd_id) =>
 exports.RemoveFormIpdContentOfMedicalRecordResult = async (form_ipd_id) =>
     await pm.form_ipd_content_of_medical_record_results.deleteMany({ where: { form_ipd_id: form_ipd_id } })
 
-exports.RemovePdf = async (form_ipd_id) => await pm.pdf.deleteMany({ where: { form_ipd_id: form_ipd_id } })
+exports.RemovePdf = async (form_ipd_id) => await pm.pdf_ipd.deleteMany({ where: { form_ipd_id: form_ipd_id } })
 
 // Remove ข้อมูล form_ipds จำนวน 1 record อ้างอิงจาก form_ipd_id
 exports.RemoveFormIpd = async (form_ipd_id) =>
@@ -172,6 +172,7 @@ exports.FetchPatientInHos = async (patient_an) => {
                 o.hn,
                 o.vn,
                 i.an,
+                pt.cid,
                 w.name AS ward_name,
                 o.vstdate,
                 i.regdate,
@@ -295,7 +296,7 @@ exports.FetchAnByFormIpdId = async (form_ipd_id) =>
     })
 
 exports.FetchOnePdfByFormIpdId = async (form_ipd_id) =>
-    await pm.pdf.findFirst({
+    await pm.pdf_ipd.findFirst({
         where: { form_ipd_id: form_ipd_id },
         include: {
             form_ipd_id: false,
@@ -303,7 +304,7 @@ exports.FetchOnePdfByFormIpdId = async (form_ipd_id) =>
             mime_type: false,
             created_at: false,
             created_by: false,
-            pdf_id: false,
+            pdf_ipd_id: false,
             form_ipds: {
                 include: {
                     patients: {
@@ -340,7 +341,7 @@ exports.InsertFormIpdOverallFindingResult = async (data) =>
 exports.InsertFormIpdReviewStatusResult = async (data) =>
     await pm.form_ipd_review_status_results.create({ data: data })
 
-exports.InsertPdf = async (data) => await pm.pdf.create({ data: data })
+exports.InsertPdf = async (data) => await pm.pdf_ipd.create({ data: data })
 // Insert End #################################################################################################################################
 
 // Update Start #################################################################################################################################
