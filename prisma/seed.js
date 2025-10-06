@@ -25,8 +25,9 @@ async function main() {
     console.log('✅ Patient services completed')
 
     const fpsIpd = await pm.patient_services.findFirst({ where: { patient_service_name_english: 'IPD' }, select: { patient_service_id: true } })
+    const fpsOpdEr = await pm.patient_services.findFirst({ where: { patient_service_name_english: 'OPD/ER' }, select: { patient_service_id: true } })
 
-    // 💥table content_of_medical_records
+    // 💥table content_of_medical_records IPD
     await pm.content_of_medical_records.createMany({
         data: [
             {
@@ -248,9 +249,176 @@ async function main() {
         ],
         skipDuplicates: true, // rerun ได้ไม่ล้ม
     })
-    console.log('✅ Content of medical record completed')
+    console.log('✅ Content of medical record IPD completed')
 
-    // 💥table review_status
+    // 💥table content_of_medical_records OPD
+    await pm.content_of_medical_records.createMany({
+        data: [
+            {
+                content_of_medical_record_name: "Patient's Profile",
+                na_type: false,
+                missing_type: true,
+                criterion_number_1_type: true,
+                criterion_number_2_type: true,
+                criterion_number_3_type: true,
+                criterion_number_4_type: true,
+                criterion_number_5_type: true,
+                criterion_number_6_type: true,
+                criterion_number_7_type: true,
+                points_awarded_type: false,
+                points_deducted_type: true,
+                priority: 1,
+                patient_service_id: fpsOpdEr.patient_service_id,
+            },
+            {
+                content_of_medical_record_name: "History (1 st visit)",
+                na_type: false,
+                missing_type: true,
+                criterion_number_1_type: true,
+                criterion_number_2_type: true,
+                criterion_number_3_type: true,
+                criterion_number_4_type: true,
+                criterion_number_5_type: true,
+                criterion_number_6_type: true,
+                criterion_number_7_type: true,
+                points_awarded_type: true,
+                points_deducted_type: false,
+                priority: 2,
+                patient_service_id: fpsOpdEr.patient_service_id,
+            },
+            {
+                content_of_medical_record_name: "Physical examination/Diagnosis",
+                na_type: false,
+                missing_type: true,
+                criterion_number_1_type: true,
+                criterion_number_2_type: true,
+                criterion_number_3_type: true,
+                criterion_number_4_type: true,
+                criterion_number_5_type: true,
+                criterion_number_6_type: true,
+                criterion_number_7_type: true,
+                points_awarded_type: false,
+                points_deducted_type: false,
+                priority: 3,
+                patient_service_id: fpsOpdEr.patient_service_id,
+            },
+            {
+                content_of_medical_record_name: "Treatment/Investigation",
+                na_type: false,
+                missing_type: true,
+                criterion_number_1_type: true,
+                criterion_number_2_type: true,
+                criterion_number_3_type: true,
+                criterion_number_4_type: true,
+                criterion_number_5_type: true,
+                criterion_number_6_type: true,
+                criterion_number_7_type: true,
+                points_awarded_type: true,
+                points_deducted_type: false,
+                priority: 4,
+                patient_service_id: fpsOpdEr.patient_service_id,
+            },
+            {
+                content_of_medical_record_name: "Follow up ครั้งที่ 1",
+                na_type: true,
+                missing_type: true,
+                criterion_number_1_type: true,
+                criterion_number_2_type: true,
+                criterion_number_3_type: true,
+                criterion_number_4_type: true,
+                criterion_number_5_type: true,
+                criterion_number_6_type: true,
+                criterion_number_7_type: true,
+                points_awarded_type: true,
+                points_deducted_type: false,
+                priority: 5,
+                patient_service_id: fpsOpdEr.patient_service_id,
+            },
+            {
+                content_of_medical_record_name: "Follow up ครั้งที่ 2",
+                na_type: true,
+                missing_type: true,
+                criterion_number_1_type: true,
+                criterion_number_2_type: true,
+                criterion_number_3_type: true,
+                criterion_number_4_type: true,
+                criterion_number_5_type: true,
+                criterion_number_6_type: true,
+                criterion_number_7_type: true,
+                points_awarded_type: true,
+                points_deducted_type: false,
+                priority: 6,
+                patient_service_id: fpsOpdEr.patient_service_id,
+            },
+            {
+                content_of_medical_record_name: "Follow up ครั้งที่ 3",
+                na_type: true,
+                missing_type: true,
+                criterion_number_1_type: true,
+                criterion_number_2_type: true,
+                criterion_number_3_type: true,
+                criterion_number_4_type: true,
+                criterion_number_5_type: true,
+                criterion_number_6_type: true,
+                criterion_number_7_type: true,
+                points_awarded_type: true,
+                points_deducted_type: false,
+                priority: 7,
+                patient_service_id: fpsOpdEr.patient_service_id,
+            },
+            {
+                content_of_medical_record_name: "Operative note",
+                na_type: true,
+                missing_type: true,
+                criterion_number_1_type: true,
+                criterion_number_2_type: true,
+                criterion_number_3_type: true,
+                criterion_number_4_type: true,
+                criterion_number_5_type: true,
+                criterion_number_6_type: true,
+                criterion_number_7_type: true,
+                points_awarded_type: false,
+                points_deducted_type: false,
+                priority: 8,
+                patient_service_id: fpsOpdEr.patient_service_id,
+            },
+            {
+                content_of_medical_record_name: "Informed consent",
+                na_type: true,
+                missing_type: true,
+                criterion_number_1_type: true,
+                criterion_number_2_type: true,
+                criterion_number_3_type: true,
+                criterion_number_4_type: true,
+                criterion_number_5_type: true,
+                criterion_number_6_type: true,
+                criterion_number_7_type: true,
+                points_awarded_type: false,
+                points_deducted_type: false,
+                priority: 9,
+                patient_service_id: fpsOpdEr.patient_service_id,
+            },
+            {
+                content_of_medical_record_name: "Rehabilitation record *",
+                na_type: false,
+                missing_type: false,
+                criterion_number_1_type: false,
+                criterion_number_2_type: false,
+                criterion_number_3_type: false,
+                criterion_number_4_type: false,
+                criterion_number_5_type: false,
+                criterion_number_6_type: false,
+                criterion_number_7_type: false,
+                points_awarded_type: false,
+                points_deducted_type: false,
+                priority: 10,
+                patient_service_id: fpsOpdEr.patient_service_id,
+            }
+        ],
+        skipDuplicates: true, // rerun ได้ไม่ล้ม
+    })
+
+    // 💥table review_status IPD
     await pm.review_status.createMany({
         data: [
             {

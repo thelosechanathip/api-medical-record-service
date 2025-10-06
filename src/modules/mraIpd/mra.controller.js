@@ -118,7 +118,7 @@ exports.FetchOnePdfByAn = async (req, res) => {
         if (!FPiIFi) return msg(res, 404, { message: 'Data not found!' })
 
         const FoPBFii = await mraM.FetchOnePdfByFormIpdId(FPiIFi.form_ipd_id)
-        FoPBFii.pdf_file = Buffer.from(FoPBFii.pdf_file).toString('base64')
+        FoPBFii.pdf_ipd_file = Buffer.from(FoPBFii.pdf_ipd_file).toString('base64')
 
         return msg(res, 200, { data: FoPBFii })
     } catch (err) {

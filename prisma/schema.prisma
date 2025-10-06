@@ -84,7 +84,7 @@ model patients {
   hcode_id                String // Foreign Key ของตาราง hcodes( ข้อมูลรหัสประจำสถานพยาบาล )
   patient_fullname        String // คำนำหน้า-ชื่อ-สกุล คนไข้
   patient_hn              String // หมายเลขประจำตัวคนไข้
-  patient_cid             String // หมายเลขบัตรประจำตัวประชาชน
+  patient_cid             String? // หมายเลขบัตรประจำตัวประชาชน
   patient_vn              String?     @unique // หมายเลขการเข้ารักษาตัวในโรงพยาบาล
   patient_an              String?     @unique // หมายเลขการนอนโรงพยาบาล
   patient_ward            String? // หมายเลขตึก
