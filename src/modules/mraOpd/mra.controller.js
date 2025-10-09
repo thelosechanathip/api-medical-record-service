@@ -3,6 +3,7 @@ const { setLog } = require('../../services/setLog.service')
 const { ComparePassword } = require('../../services/bcrypt')
 const mraM = require('./mra.model')
 const moment = require('moment')
+const { cryptoEncode } = require('../../services/crypto.service')
 
 
 function ensureHHMMSS(s) {
@@ -54,7 +55,9 @@ exports.FetchOnePatientData = async (req, res) => {
         if (FPIH.regdate) FPIH.regdate = moment(FPIH.regdate).format('YYYY-MM-DD')
         if (FPIH.dchdate) FPIH.dchdate = moment(FPIH.dchdate).format('YYYY-MM-DD')
 
-        return msg(res, 200, { data: FPIH })
+        const enCode = cryptoEncode(FPIH)
+
+        return msg(res, 200, { data: enCode })
     } catch (err) {
         console.log('FetchOnePatientData : ', err)
         return msg(res, 500, { message: err.message })
@@ -84,7 +87,23 @@ exports.GenerateForm = async (req, res) => {
         const fPIM = await mraM.FetchPatientInMra(mraD.patient_vn)
 
         if (fPIM) {
-
+            // ดึงข้อมูล form_opd_id จำนวน 1 record จากตาราง form_opds อ้างอิงจาก patient_id
+            const formData = await mraM.FetchOneFormOpdIdByPatientId(fPIM.patient_id)
+            // ดึงข้อมูล review_status_id จำนวน 1 record จากตาราง form_opd_review_status_results อ้างอิงจาก form_opd_id
+            const formORSR = await mraM.FetchFormOpdReviewStatusResultsByFormOpdId(formData.form_opd_id)
+            if (formORSR) {
+                return msg(res, 409, { message: `ได้มีข้อมูลของ ${mraD.patient_vn} อยู่ในระบบแล้ว ไม่อนุญาติให้บันทึกข้อมูลซ้ำ!` })
+            } else if (formORSR === null || formORSR === '') {
+                /*
+                    ดึงข้อมูลทั้งหมดของตาราาง form_opds ที่มีการ join
+                        patients,
+                        form_opd_content_of_medical_record_results,
+                        form_opd_overall_finding_results,
+                        form_opd_review_status_results อ้างอิงจาก patient_id
+                */
+                const result = await mraM.FetchOneMedicalRecordAuditOPD(fPIM.patient_id)
+                return msg(res, 200, { data: cryptoEncode(result) })
+            }
         }
 
         // ดึงข้อมูล คนไข้ จำนวน 1 record มาจากระบบ HOSxP อ้างอิงจาก patient_vn
@@ -174,7 +193,7 @@ exports.GenerateForm = async (req, res) => {
                 patient_id
         */
         const result = await mraM.FetchOneMedicalRecordAuditOpd(ip.patient_id)
-        return msg(res, 200, { data: result })
+        return msg(res, 200, { data: cryptoEncode(result) })
     } catch (err) {
         console.log('GenerateForm : ', err)
         return msg(res, 500, { message: err.message })

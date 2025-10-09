@@ -157,6 +157,64 @@ exports.FetchOneMedicalRecordAuditOpd = async (patient_id) => {
 // ดึงข้อมูล form_opd_id จำนวน 1 record จากตาราง form_opds อ้างอิงจาก patient_id
 exports.FetchOneFormOpdIdByPatientId = async (patient_id) =>
     await pm.form_opds.findFirst({ where: { patient_id: patient_id }, select: { form_opd_id: true } })
+
+// ดึงข้อมูล review_status_id จำนวน 1 record จากตาราง form_opd_review_status_results อ้างอิงจาก form_opd_id
+exports.FetchFormOpdReviewStatusResultsByFormOpdId = async (form_opd_id) => {
+    return await pm.form_opd_review_status_results.findFirst({
+        where: { form_opd_id: form_opd_id },
+        select: { review_status_id: true }
+    })
+}
+
+/*
+    ดึงข้อมูลทั้งหมดของตาราง form_opds
+    join
+        patients, form_opd_content_of_medical_record_results, form_opd_overall_finding_results, form_opd_review_status_results
+    อ้างอิงจาก
+        patient_id
+*/
+exports.FetchOneMedicalRecordAuditOPD = async (patient_id) => {
+    return await pm.form_opds.findMany({
+        where: {
+            patient_id: patient_id
+        },
+        include: {
+            patient_id: false,
+            patients: {
+                include: {
+                    hcode_id: false,
+                    hcodes: {
+                        select: {
+                            hcode_id: true,
+                            hcode_name: true
+                        }
+                    }
+                }
+            },
+            form_opd_content_of_medical_record_results: {
+                include: {
+                    content_of_medical_record_id: false,
+                    content_of_medical_records: {}
+                },
+                orderBy: {
+                    content_of_medical_records: { priority: 'asc' }
+                }
+            },
+            form_opd_clinical_detail_results: {
+                include: {
+                    clinical_detail_id: false,
+                    clinical_details: {}
+                }
+            },
+            form_opd_review_status_results: {
+                include: {
+                    review_status_id: false,
+                    review_status: {}
+                }
+            }
+        }
+    })
+}
 // Fetch End #################################################################################################################################
 
 // Insert Start #################################################################################################################################
