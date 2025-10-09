@@ -38,8 +38,8 @@ npx prisma db seed
 
 ### หมายเหตุก่อน Compiler
 ```
-npm ci
 npx prisma generate
+npm ci
 npm run build:bundle
 npm run build:obf
 npm prune --omit=dev

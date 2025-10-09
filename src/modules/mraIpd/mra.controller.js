@@ -1,7 +1,7 @@
 const { msg } = require('../../services/message.service')
 const { setLog } = require('../../services/setLog.service')
 const { ComparePassword } = require('../../services/bcrypt')
-const mraM = require('./mra.model') // mraM = mra model
+const mraM = require('./mra.model')
 const moment = require('moment')
 
 exports.FetchOneReviewStatusByPatientServiceId = async (req, res) => {
@@ -97,8 +97,8 @@ exports.FetchOnePatientData = async (req, res) => {
         if (FAIP) return msg(res, 409, { message: `${req.params.patient_an} นี้มีข้อมูลอยู่ในระบบ MRA แล้วไม่สามารถบันทึกซ้ำได้` })
 
         FPIH.vstdate = moment(FPIH.vstdate).format('YYYY-MM-DD')
-        FPIH.regdate = moment(FPIH.vstdate).format('YYYY-MM-DD')
-        FPIH.dchdate = moment(FPIH.vstdate).format('YYYY-MM-DD')
+        FPIH.regdate = moment(FPIH.regdate).format('YYYY-MM-DD')
+        FPIH.dchdate = moment(FPIH.dchdate).format('YYYY-MM-DD')
 
         return msg(res, 200, { data: FPIH })
     } catch (err) {

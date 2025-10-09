@@ -388,6 +388,23 @@ model form_opd_ers {
   form_opd_er_content_of_medical_record_results form_opd_er_content_of_medical_record_results[]
   form_opd_er_clinical_detail_results           form_opd_er_clinical_detail_results[]
   form_opd_er_review_status_results             form_opd_er_review_status_results[]
+  pdf_opd_er                                    pdf_opd_er[]
+}
+
+// Log การทำงานของ form_opd_er
+model form_opd_er_logs {
+  form_opd_er_log_id String   @id @default(uuid())
+  ip_address         String // ip_address ของผู้ใช้งาน
+  name               String // ชื่อผู้ใช้งาน
+  request_method     String // method ที่ผู้ใช้งานใช้
+  endpoint           String // path api ที่ผู้ใช้งานใช้
+  execution_time     Int // เวลาในการ Query
+  row_count          Int? // จำนวนข้อมูลทั้งหมด
+  status             String // สถานะการทำงาน
+  created_at         DateTime @default(now()) // วัน-เวลาที่บันทึก
+
+  @@index([created_at])
+  @@index([endpoint])
 }
 
 // ตารางเก็บข้อมูล ค่าของ ClinicalDetails OPD & ER
@@ -399,8 +416,8 @@ model form_opd_er_clinical_detail_results {
   clinical_detail_id                 String
   diagnosis                          String
   visit_date                         DateTime         @db.Date
-  review_period_start                DateTime?        @db.Time()
-  review_period_end                  DateTime?        @db.Time()
+  review_period_start                String?
+  review_period_end                  String?
   created_at                         DateTime         @default(now()) // วัน-เวลาที่บันทึก
   created_by                         String?          @default("admin") // ชื่อผู้บันทึก
   updated_at                         DateTime         @updatedAt // วัน-เวลาที่อัพเดท
@@ -447,4 +464,16 @@ model form_opd_er_review_status_results {
   created_by                          String?       @default("admin") // ชื่อผู้บันทึก
   updated_at                          DateTime      @updatedAt // วัน-เวลาที่อัพเดท
   updated_by                          String?       @default("admin") // ชื่อผู้อัพเดท
+}
+
+// ตารางเก็บข้อมูล PDF
+model pdf_opd_er {
+  pdf_opd_er_id  String       @id @default(uuid())
+  form_opd_ers   form_opd_ers @relation(fields: [form_opd_er_id], references: [form_opd_er_id], onDelete: Restrict)
+  form_opd_er_id String
+  file_name      String
+  mime_type      String       @default("application/pdf")
+  pdf_ipd_file   Bytes        @db.LongBlob
+  created_at     DateTime     @default(now()) // วัน-เวลาที่บันทึก
+  created_by     String?      @default("admin") // ชื่อผู้บันทึก
 }

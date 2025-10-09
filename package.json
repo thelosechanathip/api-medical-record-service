@@ -10,8 +10,9 @@
     "dev": "nodemon server.js",
     "prisma": "prisma",
     "seed": "node prisma/seed.js",
-    "build:bundle": "esbuild server.js --bundle --platform=node --target=node18 --format=cjs --minify --external:prisma --outfile=build/app.js",
-    "build:obf": "javascript-obfuscator build --output build --compact true --self-defending true --control-flow-flattening true --string-array true --string-array-threshold 0.75",
+    "build:bundle": "esbuild server.js --bundle --platform=node --target=node22 --format=cjs --outfile=build/app.js --external:prisma --external:@prisma/client --external:.prisma/client",
+    "build:obf": "javascript-obfuscator build --output build --compact true --self-defending true --control-flow-flattening true --string-array true --string-array-threshold 0.75 --exclude '**/.prisma/**' --exclude '**/@prisma/**'",
+    "postinstall": "prisma generate",
     "start": "node build/app.js"
   },
   "prisma": {
