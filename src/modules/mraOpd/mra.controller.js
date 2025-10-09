@@ -5,7 +5,7 @@ const mraM = require('./mra.model')
 const moment = require('moment')
 const { cryptoEncode } = require('../../services/crypto.service')
 
-
+// Function EditTime
 function ensureHHMMSS(s) {
     // รับได้ทั้ง "14:00" หรือ "14:00:00" คืนเป็น "HH:mm:ss"
     const m = String(s || '').match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?$/)
@@ -15,6 +15,7 @@ function ensureHHMMSS(s) {
     return `${h}:${mm}:${ss}`
 }
 
+// Function FetchClinicalDetailByCheckStatus
 exports.FetchClinicalDetailByCheckStatus = async (req, res) => {
     try {
         const cdId = req.params.cdId
@@ -42,7 +43,7 @@ exports.FetchClinicalDetailByCheckStatus = async (req, res) => {
     }
 }
 
-// Fetch One Patient
+// Function FetchOnePatient
 exports.FetchOnePatientData = async (req, res) => {
     try {
         const FPIH = await mraM.FetchPatientInHos(req.params.patient_vn)
@@ -64,6 +65,7 @@ exports.FetchOnePatientData = async (req, res) => {
     }
 }
 
+// Function GenerateForm
 exports.GenerateForm = async (req, res) => {
     // รับค่าจาก User
     const mraD = req.body
@@ -200,6 +202,7 @@ exports.GenerateForm = async (req, res) => {
     }
 }
 
+// Function RemoveData
 exports.RemoveData = async (req, res) => {
     try {
         const vn = req.params.patient_vn // รับค่า VN มาจาก User
