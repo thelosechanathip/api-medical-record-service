@@ -79,24 +79,24 @@ model hcode_logs {
 
 // ตารางเก็บข้อมูลผู้ป่วย
 model patients {
-  patient_id              String         @id @default(uuid())
-  hcodes                  hcodes         @relation(fields: [hcode_id], references: [hcode_id], onDelete: Restrict)
+  patient_id              String      @id @default(uuid())
+  hcodes                  hcodes      @relation(fields: [hcode_id], references: [hcode_id], onDelete: Restrict)
   hcode_id                String // Foreign Key ของตาราง hcodes( ข้อมูลรหัสประจำสถานพยาบาล )
   patient_fullname        String // คำนำหน้า-ชื่อ-สกุล คนไข้
   patient_hn              String // หมายเลขประจำตัวคนไข้
   patient_cid             String? // หมายเลขบัตรประจำตัวประชาชน
-  patient_vn              String?        @unique // หมายเลขการเข้ารักษาตัวในโรงพยาบาล
-  patient_an              String?        @unique // หมายเลขการนอนโรงพยาบาล
+  patient_vn              String?     @unique // หมายเลขการเข้ารักษาตัวในโรงพยาบาล
+  patient_an              String?     @unique // หมายเลขการนอนโรงพยาบาล
   patient_ward            String? // หมายเลขตึก
-  patient_date_service    DateTime?      @db.Date // วันที่ให้บริการ
-  patient_date_admitted   DateTime?      @db.Date // วันที่เข้ารับรักษา
-  patient_date_discharged DateTime?      @db.Date // วันที่ออกจากโรงพยาบาล
-  created_at              DateTime       @default(now()) // วัน-เวลาที่บันทึก
-  created_by              String?        @default("admin") // ชื่อผู้บันทึก
-  updated_at              DateTime       @updatedAt // วัน-เวลาที่อัพเดท
-  updated_by              String?        @default("admin") // ชื่อผู้อัพเดท
+  patient_date_service    DateTime?   @db.Date // วันที่ให้บริการ
+  patient_date_admitted   DateTime?   @db.Date // วันที่เข้ารับรักษา
+  patient_date_discharged DateTime?   @db.Date // วันที่ออกจากโรงพยาบาล
+  created_at              DateTime    @default(now()) // วัน-เวลาที่บันทึก
+  created_by              String?     @default("admin") // ชื่อผู้บันทึก
+  updated_at              DateTime    @updatedAt // วัน-เวลาที่อัพเดท
+  updated_by              String?     @default("admin") // ชื่อผู้อัพเดท
   form_ipds               form_ipds[]
-  form_opd_ers            form_opd_ers[]
+  form_opds               form_opds[]
 }
 
 // ตารางเก็บข้อมูลคำระบุของกลุ่มคนไข้
@@ -133,19 +133,19 @@ model patient_service_logs {
 
 // ตารางเก็บข้อมูลสถานะการตรวจสอบ
 model review_status {
-  review_status_id                  String                              @id @default(uuid())
-  review_status_name                String                              @db.LongText // ชื่อสถานะการตรวจสอบ
-  review_status_description         String // คำอธิบายสถานะการตรวจสอบ
-  review_status_type                Boolean? // Type ที่เอาไว้บอกว่าจำเป็นหรือไม่จำเป็นที่จะต้องอธิบายเพิ่มเติม ( 0 = ไม่จำเป็น, 1 = จำเป็น )
-  priority                          Int // ลำดับความสำคัญ
-  patient_service_id                String? // Foreign Key ของตาราง patient_services( ข้อมูลคำระบุของกลุ่มคนไข้ )
-  patient_services                  patient_services?                   @relation(fields: [patient_service_id], references: [patient_service_id], onDelete: Restrict)
-  created_at                        DateTime                            @default(now()) // วัน-เวลาที่บันทึก
-  created_by                        String?                             @default("admin") // ชื่อผู้บันทึก
-  updated_at                        DateTime                            @updatedAt // วัน-เวลาที่อัพเดท
-  updated_by                        String?                             @default("admin") // ชื่อผู้อัพเดท
-  form_ipd_review_status_results    form_ipd_review_status_results[]
-  form_opd_er_review_status_results form_opd_er_review_status_results[]
+  review_status_id               String                           @id @default(uuid())
+  review_status_name             String                           @db.LongText // ชื่อสถานะการตรวจสอบ
+  review_status_description      String // คำอธิบายสถานะการตรวจสอบ
+  review_status_type             Boolean? // Type ที่เอาไว้บอกว่าจำเป็นหรือไม่จำเป็นที่จะต้องอธิบายเพิ่มเติม ( 0 = ไม่จำเป็น, 1 = จำเป็น )
+  priority                       Int // ลำดับความสำคัญ
+  patient_service_id             String? // Foreign Key ของตาราง patient_services( ข้อมูลคำระบุของกลุ่มคนไข้ )
+  patient_services               patient_services?                @relation(fields: [patient_service_id], references: [patient_service_id], onDelete: Restrict)
+  created_at                     DateTime                         @default(now()) // วัน-เวลาที่บันทึก
+  created_by                     String?                          @default("admin") // ชื่อผู้บันทึก
+  updated_at                     DateTime                         @updatedAt // วัน-เวลาที่อัพเดท
+  updated_by                     String?                          @default("admin") // ชื่อผู้อัพเดท
+  form_ipd_review_status_results form_ipd_review_status_results[]
+  form_opd_review_status_results form_opd_review_status_results[]
 }
 
 // Log การทำงานของ review_status
@@ -166,31 +166,31 @@ model review_status_logs {
 
 // ตารางเก็บข้อมูลเนื้อหาของเวชระเบียน( true: จำเป็น, false: ไม่จำเป็น )
 model content_of_medical_records {
-  content_of_medical_record_id                  String                                          @id @default(uuid())
-  content_of_medical_record_name                String                                          @db.LongText // ชื่อเนื้อหาของเวชระเบียน
-  na_type                                       Boolean?                                        @default(false) // ประเภทของ NA
-  missing_type                                  Boolean?                                        @default(false) // ประเภทของ Missing
-  no_type                                       Boolean?                                        @default(false) // ประเภทของ No
-  criterion_number_1_type                       Boolean?                                        @default(false) // ประเภทของ criterion_number_1
-  criterion_number_2_type                       Boolean?                                        @default(false) // ประเภทของ criterion_number_2
-  criterion_number_3_type                       Boolean?                                        @default(false) // ประเภทของ criterion_number_3
-  criterion_number_4_type                       Boolean?                                        @default(false) // ประเภทของ criterion_number_4
-  criterion_number_5_type                       Boolean?                                        @default(false) // ประเภทของ criterion_number_5
-  criterion_number_6_type                       Boolean?                                        @default(false) // ประเภทของ criterion_number_6
-  criterion_number_7_type                       Boolean?                                        @default(false) // ประเภทของ criterion_number_7
-  criterion_number_8_type                       Boolean?                                        @default(false) // ประเภทของ criterion_number_8
-  criterion_number_9_type                       Boolean?                                        @default(false) // ประเภทของ criterion_number_9
-  points_awarded_type                           Boolean?                                        @default(false) // ประเภทของคะแนนที่ถูกหัก
-  points_deducted_type                          Boolean?                                        @default(false) // ประเภทของคะแนนที่ถูกหัก
-  priority                                      Int // ลำดับความสำคัญ
-  patient_services                              patient_services                                @relation(fields: [patient_service_id], references: [patient_service_id], onDelete: Restrict)
-  patient_service_id                            String // Foreign Key ของตาราง patient_services( ข้อมูลคำระบุของกลุ่มคนไข้ )
-  created_at                                    DateTime                                        @default(now()) // วัน-เวลาที่บันทึก
-  created_by                                    String?                                         @default("admin") // ชื่อผู้บันทึก
-  updated_at                                    DateTime                                        @updatedAt // วัน-เวลาที่อัพเดท
-  updated_by                                    String?                                         @default("admin") // ชื่อผู้อัพเดท
-  form_ipd_content_of_medical_record_results    form_ipd_content_of_medical_record_results[]
-  form_opd_er_content_of_medical_record_results form_opd_er_content_of_medical_record_results[]
+  content_of_medical_record_id               String                                       @id @default(uuid())
+  content_of_medical_record_name             String                                       @db.LongText // ชื่อเนื้อหาของเวชระเบียน
+  na_type                                    Boolean?                                     @default(false) // ประเภทของ NA
+  missing_type                               Boolean?                                     @default(false) // ประเภทของ Missing
+  no_type                                    Boolean?                                     @default(false) // ประเภทของ No
+  criterion_number_1_type                    Boolean?                                     @default(false) // ประเภทของ criterion_number_1
+  criterion_number_2_type                    Boolean?                                     @default(false) // ประเภทของ criterion_number_2
+  criterion_number_3_type                    Boolean?                                     @default(false) // ประเภทของ criterion_number_3
+  criterion_number_4_type                    Boolean?                                     @default(false) // ประเภทของ criterion_number_4
+  criterion_number_5_type                    Boolean?                                     @default(false) // ประเภทของ criterion_number_5
+  criterion_number_6_type                    Boolean?                                     @default(false) // ประเภทของ criterion_number_6
+  criterion_number_7_type                    Boolean?                                     @default(false) // ประเภทของ criterion_number_7
+  criterion_number_8_type                    Boolean?                                     @default(false) // ประเภทของ criterion_number_8
+  criterion_number_9_type                    Boolean?                                     @default(false) // ประเภทของ criterion_number_9
+  points_awarded_type                        Boolean?                                     @default(false) // ประเภทของคะแนนที่ถูกหัก
+  points_deducted_type                       Boolean?                                     @default(false) // ประเภทของคะแนนที่ถูกหัก
+  priority                                   Int // ลำดับความสำคัญ
+  patient_services                           patient_services                             @relation(fields: [patient_service_id], references: [patient_service_id], onDelete: Restrict)
+  patient_service_id                         String // Foreign Key ของตาราง patient_services( ข้อมูลคำระบุของกลุ่มคนไข้ )
+  created_at                                 DateTime                                     @default(now()) // วัน-เวลาที่บันทึก
+  created_by                                 String?                                      @default("admin") // ชื่อผู้บันทึก
+  updated_at                                 DateTime                                     @updatedAt // วัน-เวลาที่อัพเดท
+  updated_by                                 String?                                      @default("admin") // ชื่อผู้อัพเดท
+  form_ipd_content_of_medical_record_results form_ipd_content_of_medical_record_results[]
+  form_opd_content_of_medical_record_results form_opd_content_of_medical_record_results[]
 }
 
 // Log การทำงานของ content_of_medical_record
@@ -241,17 +241,17 @@ model overall_finding_logs {
 
 // ตารางเก็บข้อมูลทางคลินิก
 model clinical_details {
-  clinical_detail_id                  String                                @id @default(uuid())
-  clinical_detail_name                String // ชื่อข้อมูลทางคลินิก
-  priority                            Int // ลำดับความสำคัญ
-  check_status                        Boolean?                              @default(false)
-  created_at                          DateTime                              @default(now()) // วัน-เวลาที่บันทึก
-  created_by                          String?                               @default("admin") // ชื่อผู้บันทึก
-  updated_at                          DateTime                              @updatedAt // วัน-เวลาที่อัพเดท
-  updated_by                          String?                               @default("admin") // ชื่อผู้อัพเดท
-  patient_services                    patient_services?                     @relation(fields: [patient_service_id], references: [patient_service_id], onDelete: Restrict)
-  patient_service_id                  String?
-  form_opd_er_clinical_detail_results form_opd_er_clinical_detail_results[]
+  clinical_detail_id               String                             @id @default(uuid())
+  clinical_detail_name             String // ชื่อข้อมูลทางคลินิก
+  priority                         Int // ลำดับความสำคัญ
+  check_status                     Boolean?                           @default(false)
+  created_at                       DateTime                           @default(now()) // วัน-เวลาที่บันทึก
+  created_by                       String?                            @default("admin") // ชื่อผู้บันทึก
+  updated_at                       DateTime                           @updatedAt // วัน-เวลาที่อัพเดท
+  updated_by                       String?                            @default("admin") // ชื่อผู้อัพเดท
+  patient_services                 patient_services?                  @relation(fields: [patient_service_id], references: [patient_service_id], onDelete: Restrict)
+  patient_service_id               String?
+  form_opd_clinical_detail_results form_opd_clinical_detail_results[]
 }
 
 // Log การทำงานของ clinical_details
@@ -373,107 +373,107 @@ model pdf_ipd {
   created_by   String?   @default("admin") // ชื่อผู้บันทึก
 }
 
-// ตารางเก็บข้อมูล Form OPD & ER
-model form_opd_ers {
-  form_opd_er_id                                String                                          @id @default(uuid())
-  patients                                      patients?                                       @relation(fields: [patient_id], references: [patient_id], onDelete: Restrict)
-  patient_id                                    String?
-  total_score                                   Int? // เก็บค่าคะแนนรวม
-  score_obtained                                Int? // เก็บค่าคะแนนที่ได้
-  percentage                                    Float? // เก็บค่าร้อยละของข้อมูล
-  created_at                                    DateTime                                        @default(now()) // วัน-เวลาที่บันทึก
-  created_by                                    String?                                         @default("admin") // ชื่อผู้บันทึก
-  updated_at                                    DateTime                                        @updatedAt // วัน-เวลาที่อัพเดท
-  updated_by                                    String?                                         @default("admin") // ชื่อผู้อัพเดท
-  form_opd_er_content_of_medical_record_results form_opd_er_content_of_medical_record_results[]
-  form_opd_er_clinical_detail_results           form_opd_er_clinical_detail_results[]
-  form_opd_er_review_status_results             form_opd_er_review_status_results[]
-  pdf_opd_er                                    pdf_opd_er[]
+// ตารางเก็บข้อมูล Form OPD
+model form_opds {
+  form_opd_id                                String                                       @id @default(uuid())
+  patients                                   patients?                                    @relation(fields: [patient_id], references: [patient_id], onDelete: Restrict)
+  patient_id                                 String?
+  total_score                                Int? // เก็บค่าคะแนนรวม
+  score_obtained                             Int? // เก็บค่าคะแนนที่ได้
+  percentage                                 Float? // เก็บค่าร้อยละของข้อมูล
+  created_at                                 DateTime                                     @default(now()) // วัน-เวลาที่บันทึก
+  created_by                                 String?                                      @default("admin") // ชื่อผู้บันทึก
+  updated_at                                 DateTime                                     @updatedAt // วัน-เวลาที่อัพเดท
+  updated_by                                 String?                                      @default("admin") // ชื่อผู้อัพเดท
+  form_opd_content_of_medical_record_results form_opd_content_of_medical_record_results[]
+  form_opd_clinical_detail_results           form_opd_clinical_detail_results[]
+  form_opd_review_status_results             form_opd_review_status_results[]
+  pdf_opd                                    pdf_opd[]
 }
 
-// Log การทำงานของ form_opd_er
-model form_opd_er_logs {
-  form_opd_er_log_id String   @id @default(uuid())
-  ip_address         String // ip_address ของผู้ใช้งาน
-  name               String // ชื่อผู้ใช้งาน
-  request_method     String // method ที่ผู้ใช้งานใช้
-  endpoint           String // path api ที่ผู้ใช้งานใช้
-  execution_time     Int // เวลาในการ Query
-  row_count          Int? // จำนวนข้อมูลทั้งหมด
-  status             String // สถานะการทำงาน
-  created_at         DateTime @default(now()) // วัน-เวลาที่บันทึก
+// Log การทำงานของ form_opd
+model form_opd_logs {
+  form_opd_log_id String   @id @default(uuid())
+  ip_address      String // ip_address ของผู้ใช้งาน
+  name            String // ชื่อผู้ใช้งาน
+  request_method  String // method ที่ผู้ใช้งานใช้
+  endpoint        String // path api ที่ผู้ใช้งานใช้
+  execution_time  Int // เวลาในการ Query
+  row_count       Int? // จำนวนข้อมูลทั้งหมด
+  status          String // สถานะการทำงาน
+  created_at      DateTime @default(now()) // วัน-เวลาที่บันทึก
 
   @@index([created_at])
   @@index([endpoint])
 }
 
-// ตารางเก็บข้อมูล ค่าของ ClinicalDetails OPD & ER
-model form_opd_er_clinical_detail_results {
-  form_opd_er_clinical_detail_result String           @id @default(uuid())
-  form_opd_ers                       form_opd_ers     @relation(fields: [form_opd_er_id], references: [form_opd_er_id], onDelete: Restrict)
-  form_opd_er_id                     String
-  clinical_details                   clinical_details @relation(fields: [clinical_detail_id], references: [clinical_detail_id], onDelete: Restrict)
-  clinical_detail_id                 String
-  diagnosis                          String
-  visit_date                         DateTime         @db.Date
-  review_period_start                String?
-  review_period_end                  String?
-  created_at                         DateTime         @default(now()) // วัน-เวลาที่บันทึก
-  created_by                         String?          @default("admin") // ชื่อผู้บันทึก
-  updated_at                         DateTime         @updatedAt // วัน-เวลาที่อัพเดท
-  updated_by                         String?          @default("admin") // ชื่อผู้อัพเดท
+// ตารางเก็บข้อมูล ค่าของ ClinicalDetails OPD
+model form_opd_clinical_detail_results {
+  form_opd_clinical_detail_result String           @id @default(uuid())
+  form_opds                       form_opds        @relation(fields: [form_opd_id], references: [form_opd_id], onDelete: Restrict)
+  form_opd_id                     String
+  clinical_details                clinical_details @relation(fields: [clinical_detail_id], references: [clinical_detail_id], onDelete: Restrict)
+  clinical_detail_id              String
+  diagnosis                       String
+  visit_date                      DateTime         @db.Date
+  review_period_start             String?
+  review_period_end               String?
+  created_at                      DateTime         @default(now()) // วัน-เวลาที่บันทึก
+  created_by                      String?          @default("admin") // ชื่อผู้บันทึก
+  updated_at                      DateTime         @updatedAt // วัน-เวลาที่อัพเดท
+  updated_by                      String?          @default("admin") // ชื่อผู้อัพเดท
 }
 
-// ตารางเก็บข้อมูล ค่าของ ContentOfMedicalRecord OPD & ER
-model form_opd_er_content_of_medical_record_results {
-  form_opd_er_content_of_medical_record_result String                     @id @default(uuid())
-  form_opd_ers                                 form_opd_ers               @relation(fields: [form_opd_er_id], references: [form_opd_er_id], onDelete: Restrict)
-  form_opd_er_id                               String
-  content_of_medical_records                   content_of_medical_records @relation(fields: [content_of_medical_record_id], references: [content_of_medical_record_id], onDelete: Restrict)
-  content_of_medical_record_id                 String
-  na                                           Boolean? // เก็บค่า NA
-  missing                                      Boolean? // เก็บค่า Missing
-  criterion_number_1                           Int? // เก็บค่าเกณฑ์ข้อ 1
-  criterion_number_2                           Int? // เก็บค่าเกณฑ์ข้อ 2
-  criterion_number_3                           Int? // เก็บค่าเกณฑ์ข้อ 3
-  criterion_number_4                           Int? // เก็บค่าเกณฑ์ข้อ 4
-  criterion_number_5                           Int? // เก็บค่าเกณฑ์ข้อ 5
-  criterion_number_6                           Int? // เก็บค่าเกณฑ์ข้อ 6
-  criterion_number_7                           Int? // เก็บค่าเกณฑ์ข้อ 7
-  points_awarded                               Int? // เพิ่มคะแนน
-  point_deducted                               Int? // หักคะแนน
-  total_score                                  Int? // รวมคะแนน
-  score_obtained                               Int? // คะแนนที่ได้
-  comment                                      String?                    @db.LongText // Comment
-  created_at                                   DateTime                   @default(now()) // วัน-เวลาที่บันทึก
-  created_by                                   String?                    @default("admin") // ชื่อผู้บันทึก
-  updated_at                                   DateTime                   @updatedAt // วัน-เวลาที่อัพเดท
-  updated_by                                   String?                    @default("admin") // ชื่อผู้อัพเดท
+// ตารางเก็บข้อมูล ค่าของ ContentOfMedicalRecord OPD
+model form_opd_content_of_medical_record_results {
+  form_opd_content_of_medical_record_result String                     @id @default(uuid())
+  form_opds                                 form_opds                  @relation(fields: [form_opd_id], references: [form_opd_id], onDelete: Restrict)
+  form_opd_id                               String
+  content_of_medical_records                content_of_medical_records @relation(fields: [content_of_medical_record_id], references: [content_of_medical_record_id], onDelete: Restrict)
+  content_of_medical_record_id              String
+  na                                        Boolean? // เก็บค่า NA
+  missing                                   Boolean? // เก็บค่า Missing
+  criterion_number_1                        Int? // เก็บค่าเกณฑ์ข้อ 1
+  criterion_number_2                        Int? // เก็บค่าเกณฑ์ข้อ 2
+  criterion_number_3                        Int? // เก็บค่าเกณฑ์ข้อ 3
+  criterion_number_4                        Int? // เก็บค่าเกณฑ์ข้อ 4
+  criterion_number_5                        Int? // เก็บค่าเกณฑ์ข้อ 5
+  criterion_number_6                        Int? // เก็บค่าเกณฑ์ข้อ 6
+  criterion_number_7                        Int? // เก็บค่าเกณฑ์ข้อ 7
+  points_awarded                            Int? // เพิ่มคะแนน
+  point_deducted                            Int? // หักคะแนน
+  total_score                               Int? // รวมคะแนน
+  score_obtained                            Int? // คะแนนที่ได้
+  comment                                   String?                    @db.LongText // Comment
+  created_at                                DateTime                   @default(now()) // วัน-เวลาที่บันทึก
+  created_by                                String?                    @default("admin") // ชื่อผู้บันทึก
+  updated_at                                DateTime                   @updatedAt // วัน-เวลาที่อัพเดท
+  updated_by                                String?                    @default("admin") // ชื่อผู้อัพเดท
 }
 
-// ตารางเก็บข้อมูล ค่าของ ReviewStatus OPD & ER
-model form_opd_er_review_status_results {
-  form_opd_er_review_status_result_id String        @id @default(uuid())
-  form_opd_ers                        form_opd_ers  @relation(fields: [form_opd_er_id], references: [form_opd_er_id], onDelete: Restrict)
-  form_opd_er_id                      String // Foreign Key ของตาราง form_opd_ers( ตารางเก็บข้อมูล Form OPD & ER )
-  review_status                       review_status @relation(fields: [review_status_id], references: [review_status_id], onDelete: Restrict)
-  review_status_id                    String // Foreign Key ของตาราง review_status( ตารางเก็บข้อมูล Review Status )
-  review_status_result                Boolean? // เก็บค่าของ review_status
-  review_status_comment               String?       @db.LongText // เก็บค่า Comment ของ review_status
-  created_at                          DateTime      @default(now()) // วัน-เวลาที่บันทึก
-  created_by                          String?       @default("admin") // ชื่อผู้บันทึก
-  updated_at                          DateTime      @updatedAt // วัน-เวลาที่อัพเดท
-  updated_by                          String?       @default("admin") // ชื่อผู้อัพเดท
+// ตารางเก็บข้อมูล ค่าของ ReviewStatus OPD
+model form_opd_review_status_results {
+  form_opd_review_status_result_id String        @id @default(uuid())
+  form_opds                        form_opds     @relation(fields: [form_opd_id], references: [form_opd_id], onDelete: Restrict)
+  form_opd_id                      String // Foreign Key ของตาราง form_opds( ตารางเก็บข้อมูล Form OPD )
+  review_status                    review_status @relation(fields: [review_status_id], references: [review_status_id], onDelete: Restrict)
+  review_status_id                 String // Foreign Key ของตาราง review_status( ตารางเก็บข้อมูล Review Status )
+  review_status_result             Boolean? // เก็บค่าของ review_status
+  review_status_comment            String?       @db.LongText // เก็บค่า Comment ของ review_status
+  created_at                       DateTime      @default(now()) // วัน-เวลาที่บันทึก
+  created_by                       String?       @default("admin") // ชื่อผู้บันทึก
+  updated_at                       DateTime      @updatedAt // วัน-เวลาที่อัพเดท
+  updated_by                       String?       @default("admin") // ชื่อผู้อัพเดท
 }
 
 // ตารางเก็บข้อมูล PDF
-model pdf_opd_er {
-  pdf_opd_er_id  String       @id @default(uuid())
-  form_opd_ers   form_opd_ers @relation(fields: [form_opd_er_id], references: [form_opd_er_id], onDelete: Restrict)
-  form_opd_er_id String
-  file_name      String
-  mime_type      String       @default("application/pdf")
-  pdf_ipd_file   Bytes        @db.LongBlob
-  created_at     DateTime     @default(now()) // วัน-เวลาที่บันทึก
-  created_by     String?      @default("admin") // ชื่อผู้บันทึก
+model pdf_opd {
+  pdf_opd_id   String    @id @default(uuid())
+  form_opds    form_opds @relation(fields: [form_opd_id], references: [form_opd_id], onDelete: Restrict)
+  form_opd_id  String
+  file_name    String
+  mime_type    String    @default("application/pdf")
+  pdf_ipd_file Bytes     @db.LongBlob
+  created_at   DateTime  @default(now()) // วัน-เวลาที่บันทึก
+  created_by   String?   @default("admin") // ชื่อผู้บันทึก
 }

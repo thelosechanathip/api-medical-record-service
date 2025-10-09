@@ -28,7 +28,7 @@ const cdR = require('./modules/setting/clinicalDetail/clinical-detail.route')
 
 // MRA
 const mraIpd = require('./modules/mraIpd/mra.route')
-const mraOpdEr = require('./modules/mraOpdEr/mra.route')
+const mraOpd = require('./modules/mraOpd/mra.route')
 
 // Services
 const { msg } = require('./services/message.service')
@@ -80,7 +80,7 @@ app.use(`/${BASE_PATH}/setting`, sof)
 app.use(`/${BASE_PATH}/setting`, cdR)
 app.use(`/${BASE_PATH}`, dashboard)
 app.use(`/${BASE_PATH}`, mraIpd)
-app.use(`/${BASE_PATH}`, mraOpdEr)
+app.use(`/${BASE_PATH}`, mraOpd)
 
 // 404 NOT FOUND — ตอบให้ไว
 app.use((_, res) => msg(res, 404, { message: "404 NOT FOUND" }))

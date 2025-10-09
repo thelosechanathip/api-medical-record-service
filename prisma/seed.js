@@ -40,11 +40,11 @@ async function main() {
         {
             where: {
                 OR: [
-                    { patient_service_name_english: 'OPD/ER' },
-                    { patient_service_name_thai: 'ผู้ป่วยนอก/ห้องฉุกเฉิน' },
+                    { patient_service_name_english: 'OPD' },
+                    { patient_service_name_thai: 'ผู้ป่วยนอก' },
                 ]
             },
-            data: { patient_service_name_english: 'OPD/ER', patient_service_name_thai: 'ผู้ป่วยนอก/ห้องฉุกเฉิน', priority: 1 },
+            data: { patient_service_name_english: 'OPD', patient_service_name_thai: 'ผู้ป่วยนอก', priority: 1 },
         },
         {
             where: {
@@ -63,8 +63,8 @@ async function main() {
         where: { patient_service_name_english: 'IPD' },
         select: { patient_service_id: true },
     });
-    const fpsOpdEr = await pm.patient_services.findFirst({
-        where: { patient_service_name_english: 'OPD/ER' },
+    const fpsOpd = await pm.patient_services.findFirst({
+        where: { patient_service_name_english: 'OPD' },
         select: { patient_service_id: true },
     });
 
@@ -110,7 +110,7 @@ async function main() {
     })));
     console.log(`✅ Content of medical record (IPD) inserted: ${n}`);
 
-    const opdErContent = [
+    const opdContent = [
         { name: "Patient's Profile", na: false, miss: true, p1: true, p2: true, p3: true, p4: true, p5: true, p6: true, p7: true, pointsAward: false, pointsDed: true, priority: 1 },
         { name: "History (1 st visit)", na: false, miss: true, p1: true, p2: true, p3: true, p4: true, p5: true, p6: true, p7: true, pointsAward: true, pointsDed: false, priority: 2 },
         { name: "Physical examination/Diagnosis", na: false, miss: true, p1: true, p2: true, p3: true, p4: true, p5: true, p6: true, p7: true, pointsAward: false, pointsDed: false, priority: 3 },
@@ -123,10 +123,10 @@ async function main() {
         { name: "Rehabilitation record *", na: false, miss: false, p1: false, p2: false, p3: false, p4: false, p5: false, p6: false, p7: false, pointsAward: false, pointsDed: false, priority: 10 },
     ];
 
-    n = await ensureMany(pm.content_of_medical_records, opdErContent.map(c => ({
+    n = await ensureMany(pm.content_of_medical_records, opdContent.map(c => ({
         where: {
             AND: [
-                { patient_service_id: fpsOpdEr.patient_service_id },
+                { patient_service_id: fpsOpd.patient_service_id },
                 { content_of_medical_record_name: c.name },
             ],
         },
@@ -143,13 +143,14 @@ async function main() {
             points_awarded_type: c.pointsAward ?? false,
             points_deducted_type: c.pointsDed ?? false,
             priority: c.priority,
-            patient_service_id: fpsOpdEr.patient_service_id,
+            patient_service_id: fpsOpd.patient_service_id,
         },
     })));
-    console.log(`✅ Content of medical record (OPD & ER) inserted: ${n}`);
+    console.log(`✅ Content of medical record (OPD) inserted: ${n}`);
 
     // ===== review_status (คีย์: patient_service_id + ชื่อ) =====
     n = await ensureMany(pm.review_status, [
+        // IPD
         {
             where: {
                 AND: [
@@ -196,11 +197,11 @@ async function main() {
             },
         },
 
-        // OPD/ER
+        // OPD
         {
             where: {
                 AND: [
-                    { patient_service_id: fpsOpdEr.patient_service_id },
+                    { patient_service_id: fpsOpd.patient_service_id },
                     { review_status_name: 'Documentation inadequate for meaningful review' },
                 ]
             },
@@ -209,13 +210,13 @@ async function main() {
                 review_status_description: 'ข้อมูลไม่เพียงพอสำหรับการทบทวน',
                 review_status_type: false,
                 priority: 1,
-                patient_service_id: fpsOpdEr.patient_service_id,
+                patient_service_id: fpsOpd.patient_service_id,
             },
         },
         {
             where: {
                 AND: [
-                    { patient_service_id: fpsOpdEr.patient_service_id },
+                    { patient_service_id: fpsOpd.patient_service_id },
                     { review_status_name: 'No Significant medical record issue identified' },
                 ]
             },
@@ -224,13 +225,13 @@ async function main() {
                 review_status_description: 'ไม่มีปัญหาสำคัญจากการทบทวน',
                 review_status_type: false,
                 priority: 2,
-                patient_service_id: fpsOpdEr.patient_service_id,
+                patient_service_id: fpsOpd.patient_service_id,
             },
         },
         {
             where: {
                 AND: [
-                    { patient_service_id: fpsOpdEr.patient_service_id },
+                    { patient_service_id: fpsOpd.patient_service_id },
                     { review_status_name: 'Certain issues in question specify' },
                 ]
             },
@@ -239,7 +240,7 @@ async function main() {
                 review_status_description: 'มีปัญหาจากการทบทวนที่ต้องค้นต่อ',
                 review_status_type: true,
                 priority: 3,
-                patient_service_id: fpsOpdEr.patient_service_id,
+                patient_service_id: fpsOpd.patient_service_id,
             },
         },
     ]);
@@ -281,13 +282,13 @@ async function main() {
         {
             where: {
                 AND: [
-                    { patient_service_id: fpsOpdEr.patient_service_id },
+                    { patient_service_id: fpsOpd.patient_service_id },
                     { clinical_detail_name: 'General case' },
                 ]
             },
             data: {
                 clinical_detail_name: 'General case',
-                patient_service_id: fpsOpdEr.patient_service_id,
+                patient_service_id: fpsOpd.patient_service_id,
                 priority: 1,
                 check_status: false,
             },
@@ -295,13 +296,13 @@ async function main() {
         {
             where: {
                 AND: [
-                    { patient_service_id: fpsOpdEr.patient_service_id },
+                    { patient_service_id: fpsOpd.patient_service_id },
                     { clinical_detail_name: 'Chronic case' },
                 ]
             },
             data: {
                 clinical_detail_name: 'Chronic case',
-                patient_service_id: fpsOpdEr.patient_service_id,
+                patient_service_id: fpsOpd.patient_service_id,
                 priority: 2,
                 check_status: true,
             },
