@@ -24,6 +24,7 @@ const srst = require('./modules/setting/reviewStatus/review-status.route')
 const scomr = require('./modules/setting/contentOfMedicalRecord/content-of-medical-record.route')
 const sof = require('./modules/setting/overallFinding/overall-finding.route')
 const hc = require('./modules/setting/hcode/hcode.route')
+const cdR = require('./modules/setting/clinicalDetail/clinical-detail.route')
 
 // MRA
 const mraIpd = require('./modules/mraIpd/mra.route')
@@ -75,6 +76,7 @@ app.use(`/${BASE_PATH}/setting`, spts)
 app.use(`/${BASE_PATH}/setting`, srst)
 app.use(`/${BASE_PATH}/setting`, scomr)
 app.use(`/${BASE_PATH}/setting`, sof)
+app.use(`/${BASE_PATH}/setting`, cdR)
 app.use(`/${BASE_PATH}`, dashboard)
 app.use(`/${BASE_PATH}`, mraIpd)
 
