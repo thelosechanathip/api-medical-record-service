@@ -35,3 +35,12 @@ npx prisma db seed
     1. Backoffice
     2. HOSxP
     3. medical_record
+
+### หมายเหตุก่อน Compiler
+```
+npm ci
+npx prisma generate
+npm run build:bundle
+npm run build:obf
+npm prune --omit=dev
+```
