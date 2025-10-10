@@ -6,7 +6,7 @@ const db_b = require('../../libs/db_b')
 const pickFirst = (rows) => (Array.isArray(rows) && rows.length ? rows[0] : null)
 
 // บันทึกข้อมูลการทำงานของ form_ipds
-exports.InsertLog = async (data) => await pm.form_ipd_logs.create({ data: data })
+exports.InsertLog = async (data) => await pm.form_opd_logs.create({ data: data })
 
 // Remove Start #################################################################################################################################
 // Remove ข้อมูล form_opd_review_status_results จำนวนหลาย record อ้างอิงจาก form_opd_id
@@ -111,50 +111,51 @@ exports.FetchContentOfMedicalRecordByPatientId = async (patient_service_id) => {
     อ้างอิงจาก
         patient_id
 */
-exports.FetchOneMedicalRecordAuditOpd = async (patient_id) => {
-    return await pm.form_opds.findMany({
-        where: {
-            patient_id: patient_id
-        },
-        include: {
-            patient_id: false,
-            patients: {
-                include: {
-                    hcode_id: false,
-                    hcodes: {
-                        select: {
-                            hcode_id: true,
-                            hcode_name: true
-                        }
-                    }
-                }
-            },
-            form_opd_content_of_medical_record_results: {
-                include: {
-                    content_of_medical_record_id: false,
-                    content_of_medical_records: {}
-                },
-                orderBy: {
-                    content_of_medical_records: { priority: 'asc' }
-                }
-            },
-            form_opd_clinical_detail_results: {
-                include: {
-                    clinical_detail_id: false,
-                    clinical_details: {}
-                }
-            },
-            form_opd_review_status_results: {
-                include: {
-                    review_status_id: false,
-                    review_status: {}
-                }
-            }
-        }
-    })
-}
+// exports.FetchOneMedicalRecordAuditOpd = async (patient_id) => {
+//     return await pm.form_opds.findMany({
+//         where: {
+//             patient_id: patient_id
+//         },
+//         include: {
+//             patient_id: false,
+//             patients: {
+//                 include: {
+//                     hcode_id: false,
+//                     hcodes: {
+//                         select: {
+//                             hcode_id: true,
+//                             hcode_name: true
+//                         }
+//                     }
+//                 }
+//             },
+//             form_opd_content_of_medical_record_results: {
+//                 include: {
+//                     content_of_medical_record_id: false,
+//                     content_of_medical_records: {}
+//                 },
+//                 orderBy: {
+//                     content_of_medical_records: { priority: 'asc' }
+//                 }
+//             },
+//             form_opd_clinical_detail_results: {
+//                 include: {
+//                     clinical_detail_id: false,
+//                     clinical_details: {}
+//                 }
+//             },
+//             form_opd_review_status_results: {
+//                 include: {
+//                     review_status_id: false,
+//                     review_status: {}
+//                 }
+//             }
+//         }
+//     })
+// }
 
 // ดึงข้อมูล form_opd_id จำนวน 1 record จากตาราง form_opds อ้างอิงจาก patient_id
+
 exports.FetchOneFormOpdIdByPatientId = async (patient_id) =>
     await pm.form_opds.findFirst({ where: { patient_id: patient_id }, select: { form_opd_id: true } })
 
@@ -215,6 +216,69 @@ exports.FetchOneMedicalRecordAuditOPD = async (patient_id) => {
         }
     })
 }
+
+/*
+    ดึงข้อมูล 1 record จากตาราง form_opd_content_of_medical_record_results
+    อ้างอิงจาก
+        form_opd_content_of_medical_record_result_id, content_of_medical_record_id
+*/
+exports.FetchOneFormOpdContentOfMedicalRecordResult = async (form_opd_content_of_medical_record_result_id, content_of_medical_record_id) =>
+    await pm.form_opd_content_of_medical_record_results.findFirst({
+        where: {
+            form_opd_content_of_medical_record_result_id: form_opd_content_of_medical_record_result_id,
+            content_of_medical_record_id: content_of_medical_record_id
+        }
+    })
+
+// ดึงข้อมูล review_status_type จำนวน 1 record จากตาราง review_status อ้างอิงจาก review_status_id
+exports.FetchOneRSTOnReviewStatus = async (review_status_id) =>
+    await pm.review_status.findFirst({ where: { review_status_id: review_status_id }, select: { review_status_type: true } })
+
+// ดึงข้อมูล form_opd_id จำนวน 1 record จากตาราง form_opd_review_status_results อ้างอิงจาก form_opd_id
+exports.CheckUniqueFormOpdReviewStatusResult = async (form_opd_id) =>
+    await pm.form_opd_review_status_results.findFirst({ where: { form_opd_id: form_opd_id }, select: { form_opd_id: true } })
+
+exports.FetchFollowUpDateByFollowUpDateType = async (content_of_medical_record_id) =>
+    await pm.content_of_medical_records.findFirst({
+        where: { content_of_medical_record_id: content_of_medical_record_id },
+        select: { follow_up_date_type: true }
+    })
+
+exports.FetchVnByFormOpdId = async (form_opd_id) =>
+    await pm.form_opds.findFirst({
+        where: { form_opd_id: form_opd_id },
+        select: {
+            patients: {
+                select: { patient_vn: true }
+            }
+        }
+    })
+
+exports.FetchOnePdfByFormOpdId = async (form_opd_id) =>
+    await pm.pdf_opd.findFirst({
+        where: { form_opd_id: form_opd_id },
+        include: {
+            form_opd_id: false,
+            file_name: false,
+            mime_type: false,
+            created_at: false,
+            created_by: false,
+            pdf_opd_id: false,
+            form_opds: {
+                include: {
+                    patients: {
+                        select: {
+                            patient_fullname: true,
+                            patient_hn: true,
+                            patient_date_admitted: true,
+                            patient_date_discharged: true,
+                            patient_ward: true
+                        }
+                    }
+                }
+            }
+        }
+    })
 // Fetch End #################################################################################################################################
 
 // Insert Start #################################################################################################################################
@@ -229,3 +293,52 @@ exports.InsertFormOpdClinicalDetailResult = async (data) => await pm.form_opd_cl
 // บันทึกข้อมูลไปยังตาราง form_opd_content_of_medical_record_results แบบหลาย record พร้อมกัน
 exports.InsertFormOpdContentOfMedicalRecordResult = async (data) =>
     await pm.form_opd_content_of_medical_record_results.createMany({ data: data })
+
+// บันทึกข้อมูลไปยังตาราง form_opd_review_status_results
+exports.InsertFormOpdReviewStatusResult = async (data) =>
+    await pm.form_opd_review_status_results.create({ data: data })
+
+exports.InsertPdf = async (data) => await pm.pdf_opd.create({ data: data })
+// Insert End #################################################################################################################################
+
+// Update Start #################################################################################################################################
+/*
+    อัพเดทข้อมูลไปยังตาราง form_opd_content_of_medical_record_results
+    อ้างอิงจาก
+        formOpdId, content_of_medical_record_id, form_opd_content_of_medical_record_result_id
+*/
+exports.UpdateFormOpdContentOfMedicalRecordResult = async (row, formOpdId) => {
+    // เตรียม payload ตัด field ที่อาจเป็น undefined ออก
+    const data = {
+        na: row.na,
+        missing: row.missing,
+        criterion_number_1: row.criterion_number_1,
+        criterion_number_2: row.criterion_number_2,
+        criterion_number_3: row.criterion_number_3,
+        criterion_number_4: row.criterion_number_4,
+        criterion_number_5: row.criterion_number_5,
+        criterion_number_6: row.criterion_number_6,
+        criterion_number_7: row.criterion_number_7,
+        point_deducted: row.point_deducted,
+        point_awarded: row.point_awarded,
+        total_score: row.total_score,
+        score_obtained: row.score_obtained,
+        follow_up_date: row.follow_up_date,
+        comment: row.comment,
+        updated_by: row.updated_by,
+    }
+
+    // ลบ key ที่เป็น undefined
+    Object.keys(data).forEach(k => data[k] === undefined && delete data[k])
+    return pm.form_opd_content_of_medical_record_results.update({
+        where: {
+            form_opd_id: formOpdId,
+            content_of_medical_record_id: row.content_of_medical_record_id,
+            form_opd_content_of_medical_record_result_id: row.form_opd_content_of_medical_record_result_id,
+        },
+        data: data,
+    })
+}
+
+exports.UpdateFormOpd = async (form_opd_id, data) => await pm.form_opds.update({ where: { form_opd_id: form_opd_id }, data: data })
+// Update End #################################################################################################################################

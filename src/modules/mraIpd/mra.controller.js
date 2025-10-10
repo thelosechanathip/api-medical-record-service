@@ -33,7 +33,6 @@ exports.FetchOneMedicalRecordAuditIPDByAn = async (req, res) => {
         const startTime = Date.now()
         const FoMraIpd = await mraM.FetchOneMedicalRecordAuditIPD(FAIP.patient_id)
         if (!FoMraIpd) return msg(res, 404, { message: 'Data not found!' })
-        // console.log(FoMraIpd[0].form_ipd_id)
 
         const FoPBFii = await mraM.FetchOnePdfByFormIpdId(FoMraIpd[0].form_ipd_id)
         if (FoPBFii) {
@@ -118,6 +117,7 @@ exports.FetchOnePdfByAn = async (req, res) => {
         if (!FPiIFi) return msg(res, 404, { message: 'Data not found!' })
 
         const FoPBFii = await mraM.FetchOnePdfByFormIpdId(FPiIFi.form_ipd_id)
+        if (!FoPBFii) return msg(res, 404, { message: 'Data not found!' })
         FoPBFii.pdf_ipd_file = Buffer.from(FoPBFii.pdf_ipd_file).toString('base64')
 
         return msg(res, 200, { data: FoPBFii })
@@ -127,7 +127,7 @@ exports.FetchOnePdfByAn = async (req, res) => {
     }
 }
 
-exports.InsertPdf = async (req, res) => {
+exports.GeneratePdf = async (req, res) => {
     try {
         const { binary, total_score, score_obtained, percentage, ...data } = req.body
 
@@ -155,7 +155,7 @@ exports.InsertPdf = async (req, res) => {
 
         return msg(res, 200, { message: "Generate PDF Successfully!" })
     } catch (err) {
-        console.log('InsertPdf : ', err)
+        console.log('GeneratePdf : ', err)
         return msg(res, 500, { message: err.message })
     }
 }
@@ -307,12 +307,6 @@ exports.UpdateForm = async (req, res) => {
             const { content } = data // แยกข้อมูล content ออกมาจาก body
 
             // ตรวจสอบค่า Array ที่ส่งมาพร้อมกันว่ามีซ้ำหรือไม่?
-            // const FiComrrI = content.map(i => i.form_ipd_content_of_medical_record_result_id)
-            // const dupFiComrrI = FiComrrI.filter((id, idx) => FiComrrI.indexOf(id) !== idx)
-            // if (dupFiComrrI.length > 0) {
-
-            // }
-
             let ContentErrorResult = []
             // let ContentTypeErrorResult = []
             for (row of content) {

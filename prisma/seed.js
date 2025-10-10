@@ -111,16 +111,16 @@ async function main() {
     console.log(`✅ Content of medical record (IPD) inserted: ${n}`);
 
     const opdContent = [
-        { name: "Patient's Profile", na: false, miss: true, p1: true, p2: true, p3: true, p4: true, p5: true, p6: true, p7: true, pointsAward: false, pointsDed: true, priority: 1 },
-        { name: "History (1 st visit)", na: false, miss: true, p1: true, p2: true, p3: true, p4: true, p5: true, p6: true, p7: true, pointsAward: true, pointsDed: false, priority: 2 },
-        { name: "Physical examination/Diagnosis", na: false, miss: true, p1: true, p2: true, p3: true, p4: true, p5: true, p6: true, p7: true, pointsAward: false, pointsDed: false, priority: 3 },
-        { name: "Treatment/Investigation", na: false, miss: true, p1: true, p2: true, p3: true, p4: true, p5: true, p6: true, p7: true, pointsAward: true, pointsDed: false, priority: 4 },
-        { name: "Follow up ครั้งที่ 1", na: true, miss: true, p1: true, p2: true, p3: true, p4: true, p5: true, p6: true, p7: true, pointsAward: true, pointsDed: false, priority: 5 },
-        { name: "Follow up ครั้งที่ 2", na: true, miss: true, p1: true, p2: true, p3: true, p4: true, p5: true, p6: true, p7: true, pointsAward: true, pointsDed: false, priority: 6 },
-        { name: "Follow up ครั้งที่ 3", na: true, miss: true, p1: true, p2: true, p3: true, p4: true, p5: true, p6: true, p7: true, pointsAward: true, pointsDed: false, priority: 7 },
-        { name: "Operative note", na: true, miss: true, p1: true, p2: true, p3: true, p4: true, p5: true, p6: true, p7: true, pointsAward: false, pointsDed: false, priority: 8 },
-        { name: "Informed consent", na: true, miss: true, p1: true, p2: true, p3: true, p4: true, p5: true, p6: true, p7: true, pointsAward: false, pointsDed: false, priority: 9 },
-        { name: "Rehabilitation record *", na: false, miss: false, p1: false, p2: false, p3: false, p4: false, p5: false, p6: false, p7: false, pointsAward: false, pointsDed: false, priority: 10 },
+        { name: "Patient's Profile", na: false, miss: true, p1: true, p2: true, p3: true, p4: true, p5: true, p6: true, p7: true, pointsAward: false, pointsDed: true, followUpDate: false, priority: 1 },
+        { name: "History (1 st visit)", na: false, miss: true, p1: true, p2: true, p3: true, p4: true, p5: true, p6: true, p7: true, pointsAward: true, pointsDed: false, followUpDate: false, priority: 2 },
+        { name: "Physical examination/Diagnosis", na: false, miss: true, p1: true, p2: true, p3: true, p4: true, p5: true, p6: true, p7: true, pointsAward: false, pointsDed: false, followUpDate: false, priority: 3 },
+        { name: "Treatment/Investigation", na: false, miss: true, p1: true, p2: true, p3: true, p4: true, p5: true, p6: true, p7: true, pointsAward: true, pointsDed: false, followUpDate: false, priority: 4 },
+        { name: "Follow up ครั้งที่ 1", na: true, miss: true, p1: true, p2: true, p3: true, p4: true, p5: true, p6: true, p7: true, pointsAward: true, pointsDed: false, followUpDate: true, priority: 5 },
+        { name: "Follow up ครั้งที่ 2", na: true, miss: true, p1: true, p2: true, p3: true, p4: true, p5: true, p6: true, p7: true, pointsAward: true, pointsDed: false, followUpDate: true, priority: 6 },
+        { name: "Follow up ครั้งที่ 3", na: true, miss: true, p1: true, p2: true, p3: true, p4: true, p5: true, p6: true, p7: true, pointsAward: true, pointsDed: false, followUpDate: true, priority: 7 },
+        { name: "Operative note", na: true, miss: true, p1: true, p2: true, p3: true, p4: true, p5: true, p6: true, p7: true, pointsAward: false, pointsDed: false, followUpDate: false, priority: 8 },
+        { name: "Informed consent", na: true, miss: true, p1: true, p2: true, p3: true, p4: true, p5: true, p6: true, p7: true, pointsAward: false, pointsDed: false, followUpDate: false, priority: 9 },
+        { name: "Rehabilitation record *", na: false, miss: false, p1: false, p2: false, p3: false, p4: false, p5: false, p6: false, p7: false, pointsAward: false, followUpDate: false, pointsDed: false, priority: 10 },
     ];
 
     n = await ensureMany(pm.content_of_medical_records, opdContent.map(c => ({
@@ -143,6 +143,7 @@ async function main() {
             points_awarded_type: c.pointsAward ?? false,
             points_deducted_type: c.pointsDed ?? false,
             priority: c.priority,
+            followUpDate: c.followUpDate,
             patient_service_id: fpsOpd.patient_service_id,
         },
     })));

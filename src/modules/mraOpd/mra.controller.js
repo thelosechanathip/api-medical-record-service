@@ -7,11 +7,17 @@ const { cryptoEncode } = require('../../services/crypto.service')
 
 // Function EditTime
 function ensureHHMMSS(s) {
-    // รับได้ทั้ง "14:00" หรือ "14:00:00" คืนเป็น "HH:mm:ss"
-    const m = String(s || '').match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?$/)
+    // รับ "14:00" หรือ "14:00:00" -> คืน "HH:mm:ss"
+    const m = /^\s*(\d{1,2}):(\d{2})(?::(\d{2}))?\s*$/.exec(String(s ?? ''))
     if (!m) throw new Error(`Invalid time: ${s}`)
-    const [h, mm, ss = '00'] = [m[1].padStart(2, '0'), m[2], m[3].padStart(2, '0')]
-    if (+h > 23 || +mm > 59 || +ss > 59) throw new Error(`Out-of-range time: ${s}`)
+
+    const h = m[1].padStart(2, '0')
+    const mm = m[2]                       // regex บังคับให้เป็น 2 หลักแล้ว
+    const ss = (m[3] ?? '00').padStart(2, '0')  // << สำคัญ: เติม '00' ถ้าไม่มีวินาที
+
+    const hi = +h, mi = +mm, si = +ss
+    if (hi > 23 || mi > 59 || si > 59) throw new Error(`Out-of-range time: ${s}`)
+
     return `${h}:${mm}:${ss}`
 }
 
@@ -43,6 +49,55 @@ exports.FetchClinicalDetailByCheckStatus = async (req, res) => {
     }
 }
 
+// FetchOne By VN
+exports.FetchOneMedicalRecordAuditOPDByVn = async (req, res) => {
+    try {
+        const FVIP = await mraM.FetchVnInPatient(req.params.patient_vn)
+        if (!FVIP) return msg(res, 404, { message: `${req.params.patient_vn}นี้ไม่มีข้อมูลอยู่ในระบบ!` })
+
+        const startTime = Date.now()
+        const FoMraOpd = await mraM.FetchOneMedicalRecordAuditOPD(FVIP.patient_id)
+        if (!FoMraOpd) return msg(res, 404, { message: 'Data not found!' })
+
+        const FoPBFoi = await mraM.FetchOnePdfByFormOpdId(FoMraOpd[0].form_opd_id)
+        if (FoPBFoi) {
+            FoPBFoi.pdf_opd_file = Buffer.from(FoPBFoi.pdf_opd_file).toString('base64')
+            return msg(res, 409, { data: FoPBFoi })
+        }
+
+        const resultsWithDefaultSum = []
+
+        for (const data of FoMraOpd) {
+            let scoreObtained = 0
+            let totalScoreSum = 0
+            for (const content of data.form_opd_content_of_medical_record_results) {
+                if (typeof (content.total_score, content.score_obtained) === 'number') {
+                    totalScoreSum += content.total_score
+                    scoreObtained += content.score_obtained
+                }
+            }
+
+            data.totalScoreSum = totalScoreSum
+            data.scoreObtained = scoreObtained
+            const resultSum = scoreObtained / totalScoreSum * 100
+            const formattedResultSum = resultSum.toFixed(2)
+            data.formattedResultSum = parseFloat(formattedResultSum)
+            resultsWithDefaultSum.push(data)
+        }
+
+        const endTime = Date.now() - startTime
+
+        // Set and Insert Log
+        const sl = setLog(req, req.fullname, endTime, FoMraOpd)
+        await mraM.InsertLog(sl)
+
+        return msg(res, 200, { data: cryptoEncode(resultsWithDefaultSum) })
+    } catch (err) {
+        console.log('FetchOneMedicalRecordAuditOPDByVn : ', err)
+        return msg(res, 500, { message: err.message })
+    }
+}
+
 // Function FetchOnePatient
 exports.FetchOnePatientData = async (req, res) => {
     try {
@@ -56,11 +111,65 @@ exports.FetchOnePatientData = async (req, res) => {
         if (FPIH.regdate) FPIH.regdate = moment(FPIH.regdate).format('YYYY-MM-DD')
         if (FPIH.dchdate) FPIH.dchdate = moment(FPIH.dchdate).format('YYYY-MM-DD')
 
-        const enCode = cryptoEncode(FPIH)
-
-        return msg(res, 200, { data: enCode })
+        return msg(res, 200, { data: cryptoEncode(FPIH) })
     } catch (err) {
         console.log('FetchOnePatientData : ', err)
+        return msg(res, 500, { message: err.message })
+    }
+}
+
+// Function FetchOnePDF By VN
+exports.FetchOnePdfByVn = async (req, res) => {
+    try {
+        const { patient_vn } = req.params
+
+        const FVIP = await mraM.FetchVnInPatient(patient_vn)
+        if (!FVIP) return msg(res, 404, { message: `${patient_vn} นี้ไม่มีข้อมูลอยู่ในระบบ!` })
+
+        const FPiIFo = await mraM.FetchPatientIdInFormOpd(FVIP.patient_id)
+        if (!FPiIFo) return msg(res, 404, { message: 'Data not found!' })
+
+        const FoPBFoi = await mraM.FetchOnePdfByFormOpdId(FPiIFo.form_opd_id)
+        if (!FoPBFoi) return msg(res, 404, { message: 'Data not found!' })
+        FoPBFoi.pdf_opd_file = Buffer.from(FoPBFoi.pdf_opd_file).toString('base64')
+
+        return msg(res, 200, { data: cryptoEncode(FoPBFoi) })
+    } catch (err) {
+        console.log('FetchOnePdfByVn : ', err)
+        return msg(res, 500, { message: err.message })
+    }
+}
+
+// Function Generate PDF
+exports.GeneratePdf = async (req, res) => {
+    try {
+        const { binary, total_score, score_obtained, percentage, ...data } = req.body
+
+        const FvBFoi = await mraM.FetchVnByFormOpdId(data.form_opd_id)
+        if (!FvBFoi) return msg(res, 404, { message: 'Data not found!' })
+
+        const FoPBFoi = await mraM.FetchOnePdfByFormOpdId(data.form_opd_id)
+        if (FoPBFoi) return msg(res, 409, { message: 'PDF already exists!' })
+
+        const buffer = Buffer.from(binary, 'base64')
+
+        // Set Data
+        data.file_name = FvBFoi.patients.patient_vn + ".pdf"
+        data.mime_type = 'application/pdf'
+        data.pdf_opd_file = buffer
+        data.created_by = req.fullname
+
+        const IP = await mraM.InsertPdf(data)
+        if (IP) {
+            const setDataUpdateForm = {
+                total_score, score_obtained, percentage
+            }
+            await mraM.UpdateFormOpd(data.form_opd_id, setDataUpdateForm)
+        }
+
+        return msg(res, 200, { message: "Generate PDF Successfully!" })
+    } catch (err) {
+        console.log('GeneratePdf : ', err)
         return msg(res, 500, { message: err.message })
     }
 }
@@ -194,10 +303,158 @@ exports.GenerateForm = async (req, res) => {
             อ้างอิงจาก
                 patient_id
         */
-        const result = await mraM.FetchOneMedicalRecordAuditOpd(ip.patient_id)
+        const result = await mraM.FetchOneMedicalRecordAuditOPD(ip.patient_id)
         return msg(res, 200, { data: cryptoEncode(result) })
     } catch (err) {
         console.log('GenerateForm : ', err)
+        return msg(res, 500, { message: err.message })
+    }
+}
+
+// Functipn Update
+exports.UpdateForm = async (req, res) => {
+    try {
+        const data = req.body // รับค่า body มาจาก User
+
+        // Set ข้อมูลของผู้ที่อัพเดทข้อมูล
+        const fullnamePayload = { updated_by: req.fullname }
+
+        const startTime = Date.now()
+        const faip = await mraM.FetchVnInPatient(req.params.patient_vn) // ดึงข้อมูล patient_id จากตาราง patients อ้างอิงจาก patient_vn
+        if (!faip) return msg(res, 404, { message: `ไม่พอข้อมูล ${vn} นี่ในระบบ MRA OPD` })
+
+        const fOFOIBPI = await mraM.FetchOneFormOpdIdByPatientId(faip.patient_id) // ดึงข้อมูล form_ipd_id จากตาราง form_ipds อ้างอิงจาก patient_id
+        if (fOFOIBPI) {
+            const { content } = data // แยกข้อมูล content ออกมาจาก body
+
+            // ตรวจสอบค่า Array ที่ส่งมาพร้อมกันว่ามีซ้ำหรือไม่?
+            let ContentErrorResult = []
+            let ContentErrorStatus = []
+
+            for (row of content) {
+                /*
+                    ดึงข้อมูล 1 record จากตาราง form_opd_content_of_medical_record_results
+                    อ้างอิงจาก
+                        form_opd_content_of_medical_record_result_id, content_of_medical_record_id
+                */
+                const FoFoComrr = await mraM.FetchOneFormOpdContentOfMedicalRecordResult(
+                    row.form_opd_content_of_medical_record_result_id, row.content_of_medical_record_id
+                )
+                if (!FoFoComrr) {
+                    ContentErrorStatus.push(404)
+                    ContentErrorResult.push(
+                        `ไม่พอข้อมูล ${row.form_opd_content_of_medical_record_result_id} หรือ ${row.content_of_medical_record_id} นี่ในระบบ MRA OPD`
+                    )
+                    continue
+                }
+
+                const FFudBFudt = await mraM.FetchFollowUpDateByFollowUpDateType(
+                    row.content_of_medical_record_id
+                )
+                if (FFudBFudt.follow_up_date_type === true) {
+                    if (!row.follow_up_date) {
+                        ContentErrorStatus.push(400)
+                        ContentErrorResult.push(
+                            `กรุณากรอกข้อมูล follow_up_date ด้วย`
+                        )
+                        continue
+                    } else {
+                        row.follow_up_date = new Date(row.follow_up_date)
+                    }
+                } else {
+                    row.follow_up_date = null
+                }
+            }
+            // ถ้าไม่พอข้อมูลในระบบ MRA OPD จะ return 404
+            if (ContentErrorResult.length > 0) return msg(res, ContentErrorStatus[0], { message: ContentErrorResult.join(" AND ") })
+
+            // คีย์ที่ไม่ต้องการให้รวมในการคำนวณ (ยกเว้น point_deducted ที่จะลบทีหลัง)
+            const excludedKeys = [
+                "form_opd_content_of_medical_record_result_id",
+                "form_opd_id",
+                "content_of_medical_record_id",
+                "na",
+                "missing",
+                "comment",
+                "total_score", // ถ้ามีอยู่ในข้อมูลเดิม จะไม่รวม
+                "point_awarded", // จะแยกไปบวกทีหลัง
+                "point_deducted", // จะแยกไปลบทีหลัง
+                "follow_up_date"
+            ]
+
+            const rFOCOMR = content.map(item => {
+                const keys = Object.keys(item).filter(k => !excludedKeys.includes(k))
+                const totalScore = keys.length
+
+                let scoreObtained
+
+                // 1) ถ้าต้องการเซตทุกค่านอก excludedKeys เป็น 0 เมื่อ na/missing เป็น true
+                if (item.na || item.missing) {
+                    keys.forEach(k => item[k] = 0)
+                    item.point_awarded = 0
+                    item.point_deducted = 0
+                    scoreObtained = 0
+                } else {
+                    const itemSum = keys.reduce((acc, k) => acc + (Number(item[k]) || 0), 0)
+                    // ลบ point_deducted
+                    scoreObtained = itemSum + (Number(item.point_awarded) || 0) - (Number(item.point_deducted) || 0)
+                    if (scoreObtained > totalScore) scoreObtained = totalScore
+                }
+
+                return {
+                    ...item,
+                    total_score: totalScore,
+                    score_obtained: scoreObtained,
+                    ...fullnamePayload
+                }
+            })
+
+            /*
+                อัพเดทข้อมูลไปยังตาราง form_opd_content_of_medical_record_results
+                อ้างอิงจาก
+                    formOpdId, content_of_medical_record_id, form_opd_content_of_medical_record_result_id
+            */
+            const updatePromissFOCOMR = rFOCOMR.map(i =>
+                mraM.UpdateFormOpdContentOfMedicalRecordResult(i, fOFOIBPI.form_opd_id)
+            )
+            await Promise.all(updatePromissFOCOMR)
+            if (updatePromissFOCOMR) {
+                const { content, ...rsD } = data
+                if (Object.keys(rsD).length > 0 && rsD.review_status_id !== null) {
+                    fullnamePayload.created_by = req.fullname
+
+                    // ดึงข้อมูล review_status_type จำนวน 1 record จากตาราง review_status อ้างอิงจาก review_status_id
+                    const foRstORs = await mraM.FetchOneRSTOnReviewStatus(rsD.review_status_id)
+                    if (foRstORs.review_status_type === true) {
+                        if (rsD.review_status_comment === null || rsD.review_status_comment === '') {
+                            return msg(res, 400, { message: 'กรุณากรอกความคิดเห็นสถานะการตรวจสอบ!' })
+                        }
+                    }
+
+                    // ดึงข้อมูล form_opd_id จำนวน 1 record จากตาราง form_opd_review_status_results อ้างอิงจาก form_opd_id
+                    const cuFoRsr = await mraM.CheckUniqueFormOpdReviewStatusResult(fOFOIBPI.form_opd_id)
+                    if (cuFoRsr) return msg(res, 409, { message: 'มีข้อมูลอยู่ในระบบแล้ว ไม่สามารถมีข้อมูลซ้ำได้!' })
+
+                    const FORSRPayload = {
+                        form_opd_id: fOFOIBPI.form_opd_id,
+                        ...rsD,
+                        ...fullnamePayload
+                    }
+                    // บันทึกข้อมูลไปยังตาราง form_opd_review_status_results
+                    await mraM.InsertFormOpdReviewStatusResult(FORSRPayload)
+                }
+            }
+        }
+
+        const endTime = Date.now() - startTime
+
+        // Set and Insert Log
+        const sl = setLog(req, req.fullname, endTime, fOFOIBPI) // sl = set log
+        await mraM.InsertLog(sl)
+
+        return msg(res, 200, { message: "อัพเดทข้อมูลเสร็จสิ้น!" })
+    } catch (err) {
+        console.log('UpdateForm : ', err)
         return msg(res, 500, { message: err.message })
     }
 }
