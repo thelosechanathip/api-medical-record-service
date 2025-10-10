@@ -1,6 +1,6 @@
 {
   "name": "api-medical-record-service",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "main": "index.js",
   "devDependencies": {
     "esbuild": "^0.23.0",

@@ -4,7 +4,7 @@
 ; ===============================
 
 #define MyAppName        "Medical-Record-Audit-API"
-#define MyAppVersion     "1.0.1"
+#define MyAppVersion     "1.0.2"
 #define MyPublisher      "โรงพยาบาลอากาศอำนวย"
 #define NodeDirName      "node"
 #define EntryFile        "server.js"
